@@ -1,4 +1,4 @@
-(load "lib")
+(load "lib.scm")
 
 ;;; Initialisations
 (define ax (pin 16)) ; Accelerometer x

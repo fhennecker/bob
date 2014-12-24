@@ -1,5 +1,4 @@
-(let ((port (open-output-file "lib")))
-  (write '(begin
+          (begin
             ;Helper functions
             (define (bit nr) (ash 1 nr)) 
             (define (pin nr) (bit nr))   
@@ -124,5 +123,4 @@
                 (send-command RAMWR)         
                 (send-byte-n A B C i)))
             
-            (init-lcd))  port)
-  (close-output-port port))
+            (init-lcd))
