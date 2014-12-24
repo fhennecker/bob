@@ -18,9 +18,9 @@
     ;; will trigger all transitions that satisfy their predicate with given context
     (for-each (lambda (transition)
 		  (let ((input (get-input context (transition-input-name transition))))
-		    (if (and input
-			           ((transition-predicate transition) (input-value input)))
-			      (change-state (transition-state transition)))))
+		    (when (and input
+			             ((transition-predicate transition) (input-value input)))
+			        (change-state (transition-state transition)))))
 		  current-transitions))
 
   (define (change-state new-state)
