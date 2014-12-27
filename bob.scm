@@ -64,6 +64,18 @@
 ;;;;;;;;;;;;;   
 ;;;; tests
 ;;;;;;;;;;;;;
+
+(define (fail testid) (begin
+  (display "\n\033[31mTEST ")
+  (display testid)
+  (display " FAILED ===================================================\033[0m")))
+(define (succeed testid) (begin
+  (display "\n\033[32mTEST ")
+  (display testid)
+  (display " SUCCEEDED ================================================\033[0m")))
+(define (test testname predicate)
+  (if predicate (succeed testname) (fail testname)))
+
 (define sad-state
   (make-state (lambda () 
         				(display "You ought to know I'm feeling very depressed")
