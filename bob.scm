@@ -5,10 +5,17 @@
   (eq? button 'pressed))
 
 ;;; Creating standard context structure
-(define (make-context time)
+(define (make-context time general-state)
+  (define (update-general-state value)
+    (set! general-state (+ general-state value)))
+  (define (update-time value)
+    (set! time (+ time value)))
   (lambda (msg . args)
     (case msg
-      ('time time))))
+      ('time time)
+      ('general-state general-state)
+      ('update-general-state (apply update-general-state args))
+      ('update-time (apply update-time args)))))
 
 
 (define (make-finite-state-machine start-state)
@@ -89,8 +96,13 @@
   (if predicate (succeed testname) (fail testname)))
 
 (define test-context
-  (make-context 123))
-(test "CTX1" (equal? (test-context 'time) 123))
+  (make-context 123 10))
+(test "CTX01" (equal? (test-context 'time) 123))
+(test "CTX02" (equal? (test-context 'general-state) 10))
+(test-context 'update-general-state -3)
+(test "CTX03" (equal? (test-context 'general-state) 7))
+(test-context 'update-time +4)
+(test "CTX04" (equal? (test-context 'time) 127))
 
 (define sad-state
   (make-state (lambda () 
