@@ -4,6 +4,12 @@
 (define (button-pressed? button)
   (eq? button 'pressed))
 
+;;; Creating standard context structure
+(define (make-context time)
+  (lambda (msg . args)
+    (case msg
+      ('time time))))
+
 
 (define (make-finite-state-machine start-state)
   (let ((current-state start-state)
@@ -61,6 +67,12 @@
       ('add-transition (apply add-transition args))
       (else (error "Msg not understood: " msg)))))
 
+;;; Bob is our character. It's an agglomerate of FSMs (characteristics).
+;;; The more characteristics are in a bad state, the quicker its general state, 
+;;; and happiness, go down. 
+; (define (make-bob characteristics)
+ ; (let (())))
+
 ;;;;;;;;;;;;;   
 ;;;; tests
 ;;;;;;;;;;;;;
@@ -75,6 +87,10 @@
   (display " SUCCEEDED ================================================\033[0m")))
 (define (test testname predicate)
   (if predicate (succeed testname) (fail testname)))
+
+(define test-context
+  (make-context 123))
+(test "CTX1" (equal? (test-context 'time) 123))
 
 (define sad-state
   (make-state (lambda () 
