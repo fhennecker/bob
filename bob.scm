@@ -57,7 +57,7 @@
 (define transition-predicate cadr)
 (define transition-state caddr)
 
-(define (do-nothing) '())
+(define (do-nothing) (values))
 
 ;;; State takes at least 2 arguments
 ;;;  entry-action: zero argument procedure (thunk)
@@ -84,6 +84,8 @@
 ;;;; tests
 ;;;;;;;;;;;;;
 
+(define testing #f)
+
 (define (fail testid) (begin
   (display "\n\033[31mTEST ")
   (display testid)
@@ -93,7 +95,9 @@
   (display testid)
   (display " SUCCEEDED ================================================\033[0m")))
 (define (test testname predicate)
-  (if predicate (succeed testname) (fail testname)))
+  (if testing 
+      (if predicate (succeed testname) (fail testname))
+      (do-nothing)))
 
 (define test-context
   (make-context 123 10))
