@@ -19,8 +19,9 @@
     (for-each (lambda (transition)
 		  (let ((input (get-input context (transition-input-name transition))))
 		    (if (and input
-			             ((transition-predicate transition) (input-value input)))
-			        (change-state (transition-state transition)))))
+			           ((transition-predicate transition) (input-value input)))
+			      (change-state (transition-state transition))
+            do-nothing)))
 		  current-transitions))
 
   (define (change-state new-state)
