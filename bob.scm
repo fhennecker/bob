@@ -25,11 +25,8 @@
   (fill-rectangle! c (* 10 i) (- 130 c) 10 #xFFF))
 
 (define (wait-and-listen n)
-  (if (is-pin-set? b1) (fill-rectangle! 30 30 30 30 #x0F0) (fill-rectangle! 30 30 30 30 #x000))
   (context 'update-buttons)
-  (if (context 'button1-pressed?)
-      (context 'update-general-state -1)
-      (do-nothing))
+  (bob 'update context)
   (if (eq? n 0) '() (wait-and-listen (- n 1))))
 
 (define (get-input context input-name)
@@ -66,19 +63,27 @@
 
 (define (make-finite-state-machine start-state)
   (let ((current-state start-state)
-        (current-transitions (start-state 'transitions)))
+        (current-transitions (start-state 'transitions))
+        (measure-value 1000)) ; default value measuring the state of one characteristic
+
+  (define (update-value value)
+    (set! measure-value (max 0 (+ measure-value value))))
+  (define (measure msg . args)
+    (case msg
+      ('value measure-value)
+      ('update (apply update-value args))))
 
   ;;; get the name of all input channels needed by the current state's transitions
   (define (get-transition-inputs)
     (map transition-input-name current-transitions))
 
   ;;; feed the FSM with current context
-  (define (feed-context context general-state)
+  (define (feed-context context)
     ;; will trigger all transitions that satisfy their predicate with given context
     (for-each (lambda (transition)
 		  (let ((input (context (transition-input-name transition))))
 		    (if (and input
-			           ((transition-predicate transition) input))
+			           ((transition-predicate transition) measure input))
 			      (change-state (transition-state transition))
             (do-nothing))))
 		  current-transitions))
@@ -125,19 +130,19 @@
 ;;; goes down. 
 (define (make-bob characteristics)
 
-  ; defining general state of Bob
-  (define general-state-value 1000)
-  (define (update-general-state-value value)
-    (set! general-state-value (+ general-state-value value)))
-  (define general-state
-    (lambda (msg . args) 
-      (case msg 
-        ('value general-state-value)
-        ('update (apply update-general-state-value args)))))
+  ; ; defining general state of Bob
+  ; (define general-state-value 1000)
+  ; (define (update-general-state-value value)
+  ;   (set! general-state-value (+ general-state-value value)))
+  ; (define general-state
+  ;   (lambda (msg . args) 
+  ;     (case msg 
+  ;       ('value general-state-value)
+  ;       ('update (apply update-general-state-value args)))))
 
-  ; what to do when context updates
+  ; feeding context to all characteristics FSMs of bob
   (define (update context)
-    (map (lambda(fsm) (fsm 'feed-context context general-state)) characteristics))
+    (map (lambda(fsm) (fsm 'feed-context context)) characteristics))
 
   (lambda (msg . args)
     (case msg
@@ -174,54 +179,41 @@
 
 (define sad-state
   (make-state (lambda () 
-        				(display "You ought to know I'm feeling very depressed")
-        				(newline))
+        				(newline)(display "You ought to know I'm feeling very depressed"))
 			        (lambda ()
-        				(display "I'm feeling a bit better")
-        				(newline))))
-
+        				(newline)(display "I'm feeling a bit better"))))
 (define happy-state
- (let* ((maximum-happiness 1000)
-	 	(happiness-counter maximum-happiness) 
-	 	(happy-state 
-      (make-state (lambda () 
-				    		    (set! happiness-counter maximum-happiness)
-				    		    (display "I am happy now!")
-				    		    (newline))
-				  		    (lambda () 
-				    		    (display "I am no longer happy :(")
-				    		    (newline)))))
-    ;;; this transition uses and sets the 'happiness-counter' lexical variable
-    ;;; which is why we make and add the transition here already
-    (happy-state 'add-transition
-		  (make-transition 
-        'time
-			  (let ((prev-time #f))  ; this is a pretty complex predicate, basically updates and checks a timer
-			    (lambda (time)
-			      (let ((delta-time (if prev-time (- time prev-time) 0)))  ; time difference
-  				    (set! happiness-counter (- happiness-counter delta-time)) ; decrement happiness
-  				    (set! prev-time time)  ; remember the current time value
-  				    (display-characteristic 0 (round (/ happiness-counter 10)))
-    					(if (< happiness-counter 0)
-    					    #t       ;; I am no longer happy now
-    					    #f))))
-			  sad-state))
-    (happy-state 'add-transition
-      (make-transition
-        'general-state
-        (lambda (state)
-          (set! happiness-counter (+ happiness-counter state))
-          (display-characteristic 0 (round (/ happiness-counter 10)))
-          (if (< happiness-counter 0)
-            #t
-            #f))
-        sad-state))
-    happy-state)) ; return the happy state as result
+  (make-state (lambda () 
+		    		    (newline) (display "I am happy now!"))
+		  		    (lambda () 
+		    		    (newline)(display "I am no longer happy :("))))
+		    		    
+
+(happy-state 'add-transition
+  (make-transition 
+    'timestep
+    (lambda (measure timestep)
+	    (measure 'update (- timestep)) ; decrement happiness
+	    (display-characteristic 0 (round (/ (measure 'value) 10)))
+			(if (< (measure 'value) 0)
+			  #t       ;; I am no longer happy now
+			  #f))
+	  sad-state))
+(happy-state 'add-transition
+  (make-transition
+    'general-state
+    (lambda (measure state)
+      (measure 'update state)
+      (display-characteristic 0 (round (/ (measure 'value) 10)))
+      (if (< (measure 'value) 0)
+        #t
+        #f))
+    sad-state))
 
 (define play-transition
  (make-transition 
     'play-button
-		(lambda (button)
+		(lambda (measure button)
 		  (if (button-pressed? button)
 			  #t
 			  #f))
@@ -231,9 +223,65 @@
 (sad-state 'add-transition play-transition)
 (define happy-fsm (make-finite-state-machine happy-state))
 
+(define fed-state 
+  (make-state
+    (lambda ()
+      (fill-rectangle!  60 60 30 30 #x0F0))
+    (lambda ()
+      (fill-rectangle! 60 60 30 30 #xF00))))
+(define unfed-state
+  (make-state
+    (lambda ()
+      (fill-rectangle!  60 60 30 30 #xF00))
+    (lambda ()
+      (fill-rectangle! 60 60 30 30 #x0F0))))
+
+(fed-state 'add-transition
+  (make-transition
+    'timestep
+    (lambda (measure timestep)
+      (measure 'update (- timestep))
+      (display-characteristic 1 (round (/ (measure 'value) 10)))
+        (if (< (measure 'value) 500)
+          #t
+          #f))
+    unfed-state))
+(fed-state 'add-transition
+  (make-transition
+    'button1-pressed?
+    (lambda (measure button1-pressed?)
+      (if button1-pressed? (measure 'update 100) (do-nothing))
+      (display-characteristic 1 (round (/ (measure 'value) 10)))
+        (if (> (measure 'value) 500)
+          #t
+          #f))
+    fed-state))
+(unfed-state 'add-transition
+  (make-transition
+    'timestep
+    (lambda (measure timestep)
+      (measure 'update (- timestep))
+      (display-characteristic 1 (round (/ (measure 'value) 10)))
+        (if (< (measure 'value) 500)
+          #f
+          #t))
+    fed-state))
+(unfed-state 'add-transition
+  (make-transition
+    'button1-pressed?
+    (lambda (measure button1-pressed?)
+      (if button1-pressed? (measure 'update 100) (do-nothing))
+      (display-characteristic 1 (round (/ (measure 'value) 10)))
+        (if (> (measure 'value) 500)
+          #t
+          #f))
+    fed-state))
+
+(define hunger-fsm (make-finite-state-machine fed-state))
+
 
 (define context (make-context 0 0))
-(define bob (make-bob (list happy-fsm)))
+(define bob (make-bob (list happy-fsm hunger-fsm)))
 
 (define (run bob context) 
     (bob 'update context)
