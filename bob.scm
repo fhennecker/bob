@@ -193,14 +193,17 @@
 (define happy-fsm (make-finite-state-machine happy-state))
 
 
-(define context (make-context 0 1000))
+(define context (make-context 0 0))
 (define bob (make-bob (list happy-fsm)))
-(bob 'update context)
-(context 'update-time 10)
-(bob 'update context)
-(context 'update-time 100)
-(context 'update-general-state -3)
-(bob 'update context)
+
+(define (run bob context) 
+    (bob 'update context)
+    (wait 1000)
+    (context 'update-time 1)
+    (context 'update-general-state -1)
+    (run bob context))
+
+(run bob context)
 
 
 
