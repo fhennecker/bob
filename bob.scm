@@ -1,8 +1,36 @@
 (load "lib.scm")
 
+;;; Initialisations
+(define ax (pin 16)) ; Accelerometer x
+(define ay (pin 17)) ; Accelerometer y
+
+(define l1 (pin 18)) ; green led
+(define l2 (pin 10)) ; orange led
+(define l3 (pin 11)) ; red led
+
+(set-output-pin! l1)
+(set-output-pin! l2)
+(set-output-pin! l3)
+
+(define b1 (pin 23)) ; button 1 (far left)
+(define b2 (pin 24)) ; button 2 (middle)
+(define b3 (pin 25)) ; button 3 (far right)
+
+(set-input-pin! b1)
+(set-input-pin! b2)
+(set-input-pin! b3)
+
 (define (display-characteristic i c) 
   (fill-rectangle! 0 (* 10 i) c 10 #xF00)
   (fill-rectangle! c (* 10 i) (- 130 c) 10 #xFFF))
+
+(define (wait-and-listen n)
+  (if (is-pin-set? b1) (fill-rectangle! 30 30 30 30 #x0F0) (fill-rectangle! 30 30 30 30 #x000))
+  (context 'update-buttons)
+  (if (context 'button1-pressed?)
+      (context 'update-general-state -1)
+      (do-nothing))
+  (if (eq? n 0) '() (wait-and-listen (- n 1))))
 
 (define (get-input context input-name)
   (assoc input-name context))
@@ -12,17 +40,25 @@
 
 ;;; Creating standard context structure
 (define (make-context time general-state)
+  (let ((button1-current-value (is-pin-set? b1))
+        (button1-previous-value (is-pin-set? b1)))
   (define (update-general-state value)
     (set! general-state (+ general-state value)))
   (define (update-time value)
     (set! time (+ time value)))
+  (define (update-buttons) 
+    (set! button1-previous-value button1-current-value)
+    (set! button1-current-value (is-pin-set? b1)))
+  (define (button1-pressed?) (and (eq? #f button1-previous-value) (eq? #t button1-current-value)))
   (lambda (msg . args)
     (case msg
       ('time time)
       ('general-state general-state)
       ('update-general-state (apply update-general-state args))
       ('update-time (apply update-time args))
-      (else #f)))) ; no such context variable
+      ('update-buttons (update-buttons))
+      ('button1-pressed? (button1-pressed?))
+      (else #f))))) ; no such context variable
 
 
 (define (make-finite-state-machine start-state)
@@ -109,7 +145,7 @@
 ;;;; tests
 ;;;;;;;;;;;;;
 
-(define testing #t)
+(define testing #f)
 
 (define (fail testid) (begin
   (display "\n\033[31mTEST ")
@@ -198,9 +234,9 @@
 
 (define (run bob context) 
     (bob 'update context)
-    (wait 1000)
+    (wait-and-listen 100)
     (context 'update-time 1)
-    (context 'update-general-state -1)
+    ;(context 'update-general-state -1)
     (run bob context))
 
 (run bob context)
