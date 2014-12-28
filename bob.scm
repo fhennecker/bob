@@ -102,13 +102,14 @@
 
   (lambda (msg . args)
     (case msg
-      ('update (apply update args)))))
+      ('update (apply update args))
+      (else (error "Message not understood: " msg)))))
 
 ;;;;;;;;;;;;;   
 ;;;; tests
 ;;;;;;;;;;;;;
 
-(define testing #f)
+(define testing #t)
 
 (define (fail testid) (begin
   (display "\n\033[31mTEST ")
@@ -129,7 +130,7 @@
 (test "CTX02" (equal? (test-context 'general-state) 10))
 (test-context 'update-general-state -3)
 (test "CTX03" (equal? (test-context 'general-state) 7))
-(test-context 'update-time +4)
+(test-context 'update-time 4)
 (test "CTX04" (equal? (test-context 'time) 127))
 
 (define sad-state
@@ -169,15 +170,12 @@
     (happy-state 'add-transition
       (make-transition
         'general-state
-        (let ((prev-state #f))
-          (lambda (state)
-            (let ((delta-state (if prev-state (- state prev-state) 0)))
-              (set! happiness-counter (+ happiness-counter delta-state))
-              (set! prev-state state)
-              (newline) (display "I am this happy (state) : ") (display happiness-counter)
-              (if (< happiness-counter 0)
-                #t
-                #f))))
+        (lambda (state)
+          (set! happiness-counter (+ happiness-counter state))
+          (display-characteristic 0 (round (/ happiness-counter 10)))
+          (if (< happiness-counter 0)
+            #t
+            #f))
         sad-state))
     happy-state)) ; return the happy state as result
 
