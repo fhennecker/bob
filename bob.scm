@@ -1,3 +1,9 @@
+(load "lib.scm")
+
+(define (display-characteristic i c) 
+  (fill-rectangle! 0 (* 10 i) c 10 #xF00)
+  (fill-rectangle! c (* 10 i) (- 130 c) 10 #xFFF))
+
 (define (get-input context input-name)
   (assoc input-name context))
 (define input-value cdr)
@@ -155,7 +161,7 @@
 			      (let ((delta-time (if prev-time (- time prev-time) 0)))  ; time difference
   				    (set! happiness-counter (- happiness-counter delta-time)) ; decrement happiness
   				    (set! prev-time time)  ; remember the current time value
-  				    (newline) (display "I am this happy (time) : ") (display happiness-counter)
+  				    (display-characteristic 0 (round (/ happiness-counter 10)))
     					(if (< happiness-counter 0)
     					    #t       ;; I am no longer happy now
     					    #f))))
