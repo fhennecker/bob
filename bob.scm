@@ -15,7 +15,8 @@
       ('time time)
       ('general-state general-state)
       ('update-general-state (apply update-general-state args))
-      ('update-time (apply update-time args)))))
+      ('update-time (apply update-time args))
+      (else #f)))) ; no such context variable
 
 
 (define (make-finite-state-machine start-state)
@@ -26,15 +27,15 @@
   (define (get-transition-inputs)
     (map transition-input-name current-transitions))
 
-  ;;; feed the FSM with some sensor information (context)
-  (define (feed-context context)
+  ;;; feed the FSM with current context
+  (define (feed-context context general-state)
     ;; will trigger all transitions that satisfy their predicate with given context
     (for-each (lambda (transition)
-		  (let ((input (get-input context (transition-input-name transition))))
+		  (let ((input (context (transition-input-name transition))))
 		    (if (and input
-			           ((transition-predicate transition) (input-value input)))
+			           ((transition-predicate transition) input))
 			      (change-state (transition-state transition))
-            do-nothing)))
+            (do-nothing))))
 		  current-transitions))
 
   (define (change-state new-state)
@@ -75,10 +76,27 @@
       (else (error "Msg not understood: " msg)))))
 
 ;;; Bob is our character. It's an agglomerate of FSMs (characteristics).
-;;; The more characteristics are in a bad state, the quicker its general state, 
-;;; and happiness, go down. 
-; (define (make-bob characteristics)
- ; (let (())))
+;;; The more characteristics are in a bad state, the quicker its general state 
+;;; goes down. 
+(define (make-bob characteristics)
+
+  ; defining general state of Bob
+  (define general-state-value 1000)
+  (define (update-general-state-value value)
+    (set! general-state-value (+ general-state-value value)))
+  (define general-state
+    (lambda (msg . args) 
+      (case msg 
+        ('value general-state-value)
+        ('update (apply update-general-state-value args)))))
+
+  ; what to do when context updates
+  (define (update context)
+    (map (lambda(fsm) (fsm 'feed-context context general-state)) characteristics))
+
+  (lambda (msg . args)
+    (case msg
+      ('update (apply update args)))))
 
 ;;;;;;;;;;;;;   
 ;;;; tests
@@ -131,19 +149,30 @@
     ;;; which is why we make and add the transition here already
     (happy-state 'add-transition
 		  (make-transition 
-        'timer
-			  (let ((prev-timer #f))  ; this is a pretty complex predicate, basically updates and checks a timer
-			    (lambda (timer)
-            (newline)
-			      (display "The time is: ") (display timer) (newline)
-			      (let ((delta-time (if prev-timer (- timer prev-timer) 0)))  ; time difference
-				    (set! happiness-counter (- happiness-counter delta-time)) ; decrement happiness
-				    (set! prev-timer timer)  ; remember the current timer value
-				    (display "I am this happy: ") (display happiness-counter) (newline)
-  					(if (< happiness-counter 0)
-  					    #t       ;; I am no longer happy now
-  					    #f))))
+        'time
+			  (let ((prev-time #f))  ; this is a pretty complex predicate, basically updates and checks a timer
+			    (lambda (time)
+			      (let ((delta-time (if prev-time (- time prev-time) 0)))  ; time difference
+  				    (set! happiness-counter (- happiness-counter delta-time)) ; decrement happiness
+  				    (set! prev-time time)  ; remember the current time value
+  				    (newline) (display "I am this happy (time) : ") (display happiness-counter)
+    					(if (< happiness-counter 0)
+    					    #t       ;; I am no longer happy now
+    					    #f))))
 			  sad-state))
+    (happy-state 'add-transition
+      (make-transition
+        'general-state
+        (let ((prev-state #f))
+          (lambda (state)
+            (let ((delta-state (if prev-state (- state prev-state) 0)))
+              (set! happiness-counter (+ happiness-counter delta-state))
+              (set! prev-state state)
+              (newline) (display "I am this happy (state) : ") (display happiness-counter)
+              (if (< happiness-counter 0)
+                #t
+                #f))))
+        sad-state))
     happy-state)) ; return the happy state as result
 
 (define play-transition
@@ -157,15 +186,17 @@
 
 (happy-state 'add-transition play-transition)
 (sad-state 'add-transition play-transition)
-(define fsm (make-finite-state-machine happy-state))
+(define happy-fsm (make-finite-state-machine happy-state))
 
-(fsm 'feed-context (list (cons 'timer 0) (cons 'play-button 'unpressed)))
-(fsm 'feed-context (list (cons 'timer 10) (cons 'play-button 'unpressed)))
-(fsm 'feed-context (list (cons 'timer 100) (cons 'play-button 'unpressed)))
-(fsm 'feed-context (list (cons 'timer 1000) (cons 'play-button 'unpressed)))
-(fsm 'feed-context (list (cons 'timer 1010) (cons 'play-button 'unpressed)))
-(fsm 'feed-context (list (cons 'timer 1020) (cons 'play-button 'pressed)))
-(fsm 'feed-context (list (cons 'timer 1030) (cons 'play-button 'unpressed)))
-(fsm 'feed-context (list (cons 'timer 1500) (cons 'play-button 'pressed)))
-(fsm 'feed-context (list (cons 'timer 1520) (cons 'play-button 'unpressed)))
+
+(define context (make-context 0 1000))
+(define bob (make-bob (list happy-fsm)))
+(bob 'update context)
+(context 'update-time 10)
+(bob 'update context)
+(context 'update-time 100)
+(context 'update-general-state -3)
+(bob 'update context)
+
+
 
