@@ -41,11 +41,13 @@
 ;;; Creating standard context structure
 (define (make-context time general-state)
   (let ((button1-current-value (is-pin-set? b1))
-        (button1-previous-value (is-pin-set? b1)))
+        (button1-previous-value (is-pin-set? b1))
+        (timestep 0))
   (define (update-general-state value)
     (set! general-state (+ general-state value)))
   (define (update-time value)
-    (set! time (+ time value)))
+    (set! time (+ time value))
+    (set! timestep value)) ; remembering the last timestep
   (define (update-buttons) 
     (set! button1-previous-value button1-current-value)
     (set! button1-current-value (is-pin-set? b1)))
@@ -53,6 +55,7 @@
   (lambda (msg . args)
     (case msg
       ('time time)
+      ('timestep timestep)
       ('general-state general-state)
       ('update-general-state (apply update-general-state args))
       ('update-time (apply update-time args))
