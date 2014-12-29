@@ -153,10 +153,11 @@
 (define bob (make-bob (list happy-fsm hunger-fsm)))
 (bob 'kickstart)
 
-(define (run bob context) 
+(define (run bob context iteration) 
     (bob 'update context)
-    (wait-and-listen 500)
+    (wait-and-listen 10)
     (context 'update-time 1)
-    (run bob context))
+    (display-characteristic 12 iteration)
+    (run bob context (+ 1 iteration)))
 
-(run bob context)
+(run bob context 0)
