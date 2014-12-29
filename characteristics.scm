@@ -41,62 +41,90 @@
 ;;;                                  HUNGER
 ;;; ============================================================================
 
-;;; ===== Hunger states =====
-(define fed-state 
-  (make-state (lambda ()
-                (fill-rectangle!  60 60 30 30 #x0F0)
-                (context 'update-general-state 2))
-              (lambda ()
-                (fill-rectangle! 60 60 30 30 #x080)
-                (context 'update-general-state -2))))
-(define unfed-state
-  (make-state (lambda ()
-                (fill-rectangle!  60 60 30 30 #xF00)
-                (context 'update-general-state -2))
-              (lambda ()
-                (fill-rectangle! 60 60 30 30 #x800)
-                (context 'update-general-state 2))))
+(define hunger-fsm
+  (let ((HUNGER_SPEED 3)
+        (FED_TO_HUNGRY_THRESHOLD 800)
+        (HUNGRY_TO_STARVING_THRESHOLD 300))
+    ;;; ===== Hunger states =====
+    (define fed-state 
+      (make-state (lambda ()
+                    (context 'update-general-state 2))
+                  (lambda ()
+                    (context 'update-general-state -2))))
+    (define hungry-state
+      (make-state (lambda ()
+                    (context 'update-general-state -2))
+                  (lambda ()
+                    (context 'update-general-state 2))))
+    (define starving-state
+      (make-state (lambda ()
+                    (context 'update-general-state -5))
+                  (lambda ()
+                    (context 'update-general-state 5))))
 
-;;; ===== Fed state transitions =====
-;;; Getting hungry over time
-(fed-state 'add-transition
-  (make-transition
-    'timestep
-    (lambda (measure timestep)
-      (measure 'update (* -5 timestep))
-      (display-characteristic 1 (round (/ (measure 'value) 10)))
-        (if (< (measure 'value) 500) #t #f))
-    unfed-state))
+    ;;; ===== Fed state transitions =====
+    ;;; Getting hungry over time
+    (fed-state 'add-transition
+      (make-transition
+        'timestep
+        (lambda (measure timestep)
+          (measure 'update (* (- HUNGER_SPEED) timestep))
+          (display-characteristic 1 (round (/ (measure 'value) 10)))
+            (if (< (measure 'value) FED_TO_HUNGRY_THRESHOLD) #t #f))
+        hungry-state))
 
-;;; Getting fed 
-(fed-state 'add-transition
-  (make-transition
-    'button1-pressed?
-    (lambda (measure button1-pressed?)
-      (if button1-pressed? (measure 'update 100) (do-nothing))
-      (display-characteristic 1 (round (/ (measure 'value) 10)))
-        (if (> (measure 'value) 500) #t #f))
-    fed-state))
+    ;;; Getting fed 
+    (fed-state 'add-transition
+      (make-transition
+        'button1-pressed?
+        (lambda (measure button1-pressed?)
+          (if button1-pressed? (measure 'update 100) (do-nothing))
+          (display-characteristic 1 (round (/ (measure 'value) 10)))
+          #f) ; no transition possible since we're going up from the highest state
+        fed-state))
 
-;;; ===== Unfed state transitions =====
-;;; Getting hungry over time
-(unfed-state 'add-transition
-  (make-transition
-    'timestep
-    (lambda (measure timestep)
-      (measure 'update (* -5 timestep))
-      (display-characteristic 1 (round (/ (measure 'value) 10)))
-        (if (< (measure 'value) 500) #f #t))
-    fed-state))
+    ;;; ===== Hungry state transitions =====
+    ;;; Getting hungry over time
+    (hungry-state 'add-transition
+      (make-transition
+        'timestep
+        (lambda (measure timestep)
+          (measure 'update (* (- HUNGER_SPEED) timestep))
+          (display-characteristic 1 (round (/ (measure 'value) 10)))
+            (if (< (measure 'value) HUNGRY_TO_STARVING_THRESHOLD) #t #f))
+        starving-state))
 
-;;; Getting fed
-(unfed-state 'add-transition
-  (make-transition
-    'button1-pressed?
-    (lambda (measure button1-pressed?)
-      (if button1-pressed? (measure 'update 100) (do-nothing))
-      (display-characteristic 1 (round (/ (measure 'value) 10)))
-        (if (> (measure 'value) 500) #t #f))
-    fed-state))
+    ;;; Getting fed
+    (hungry-state 'add-transition
+      (make-transition
+        'button1-pressed?
+        (lambda (measure button1-pressed?)
+          (if button1-pressed? (measure 'update 100) (do-nothing))
+          (display-characteristic 1 (round (/ (measure 'value) 10)))
+            (if (> (measure 'value) FED_TO_HUNGRY_THRESHOLD) #t #f))
+        fed-state))
 
-(define hunger-fsm (make-finite-state-machine fed-state))
+    ;;; ===== Unfed state transitions =====
+    ;;; Getting hungry over time
+    (starving-state 'add-transition
+      (make-transition
+        'timestep
+        (lambda (measure timestep)
+          (measure 'update (* (- HUNGER_SPEED) timestep))
+          (display-characteristic 1 (round (/ (measure 'value) 10)))
+          #f) ; getting hungry while starving will never transition to something 
+              ; else because starving is the worst state possible
+        starving-state))
+
+    ;;; Getting fed
+    (starving-state 'add-transition
+      (make-transition
+        'button1-pressed?
+        (lambda (measure button1-pressed?)
+          (if button1-pressed? (measure 'update 100) (do-nothing))
+          (display-characteristic 1 (round (/ (measure 'value) 10)))
+            (if (> (measure 'value) HUNGRY_TO_STARVING_THRESHOLD) #t #f))
+        hungry-state))
+
+    ;;; Returning the hunger FSM
+    (make-finite-state-machine fed-state)))

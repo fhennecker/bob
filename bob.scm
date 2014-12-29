@@ -47,7 +47,7 @@
 (define (make-finite-state-machine start-state)
   (let ((current-state start-state)
         (current-transitions (start-state 'transitions))
-        (measure-value 600)) ; default value measuring the state of one characteristic
+        (measure-value 1000)) ; default value measuring the state of one characteristic
 
   (define (update-value value)
     (set! measure-value (min 1300 (max 0 (+ measure-value value)))))
