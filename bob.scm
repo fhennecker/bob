@@ -96,10 +96,14 @@
 	    (set! current-transitions (new-state 'transitions))
 	    (set! current-state new-state)))
 
+  (define (kickstart)
+    (current-state 'entry-action))
+
   (lambda (msg . args)
     (case msg
       ('feed-context (apply feed-context args))
       ('get-inputs (get-transition-inputs))
+      ('kickstart (kickstart))
       (else (error "Msg not understood: " msg))))))
 
 (define (make-transition input-name predicate new-state) 
@@ -144,9 +148,13 @@
   (define (update context)
     (map (lambda(fsm) (fsm 'feed-context context)) characteristics))
 
+  (define (kickstart)
+    (map (lambda(fsm) (fsm 'kickstart)) characteristics))
+
   (lambda (msg . args)
     (case msg
       ('update (apply update args))
+      ('kickstart (kickstart))
       (else (error "Message not understood: " msg)))))
 
 ;;;;;;;;;;;;;   
@@ -282,11 +290,12 @@
 
 (define context (make-context 0 0))
 (define bob (make-bob (list happy-fsm hunger-fsm)))
+(bob 'kickstart)
 
 (define (run bob context) 
     (bob 'update context)
     (wait-and-listen 100)
-    (context 'update-time 1)
+    (context 'update-time 5)
     ;(context 'update-general-state -1)
     (run bob context))
 
