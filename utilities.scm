@@ -9,5 +9,7 @@
 
 (define (wait-and-listen n)
   (context 'update-buttons)
-  (bob 'update context)
+  (if (not (bob 'is-dead?))
+  	(bob 'update context)
+  	(do-nothing))
   (if (eq? n 0) '() (wait-and-listen (- n 1))))

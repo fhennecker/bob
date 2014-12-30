@@ -65,7 +65,7 @@
     ; (happy-state 'add-transition play-transition)
     ; (sad-state 'add-transition play-transition)
 
-    (make-finite-state-machine happy-state)))
+    (make-finite-state-machine happy-state #f)))
 
 
 ;;; ============================================================================
@@ -161,4 +161,4 @@
         hungry-state))
 
     ;;; Returning the hunger FSM
-    (make-finite-state-machine fed-state)))
+    (make-finite-state-machine fed-state #t)))

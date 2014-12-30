@@ -45,13 +45,14 @@
 
 
 ;;; ===== Finite State Machine ===== 
-(define (make-finite-state-machine start-state)
+(define (make-finite-state-machine start-state deathly)
   (let ((current-state start-state)
         (current-transitions (start-state 'transitions))
         (measure-value 1000)) ; default value measuring the state of one characteristic
 
   (define (update-value value)
-    (set! measure-value (min 1300 (max 0 (+ measure-value value)))))
+    (set! measure-value (min 1300 (max 0 (+ measure-value value))))
+    (if (and deathly (eq? measure-value 0)) (bob 'die) (do-nothing)))
   (define (measure msg . args)
     (case msg
       ('value measure-value)
@@ -121,20 +122,28 @@
 ;;; The more characteristics are in a bad state, the quicker its general state 
 ;;; goes down. 
 (define (make-bob characteristics)
+  (let ((is-dead? #f))
+    ; feeding context to all characteristics FSMs of bob
+    (define (update context)
+      (map (lambda(fsm) (fsm 'feed-context context)) characteristics))
 
-  ; feeding context to all characteristics FSMs of bob
-  (define (update context)
-    (map (lambda(fsm) (fsm 'feed-context context)) characteristics))
+    ; Performing entry action of all fsm start states
+    (define (kickstart)
+      (map (lambda(fsm) (fsm 'kickstart)) characteristics))
 
-  ; Performing entry action of all fsm start states
-  (define (kickstart)
-    (map (lambda(fsm) (fsm 'kickstart)) characteristics))
+    (define (die) 
+      (set! is-dead? #t)
+      (color-screen #x000)
+      (fill-rectangle! 60 20 10 90 #xFFF)
+      (fill-rectangle! 30 50 70 10 #xFFF))
 
-  (lambda (msg . args)
-    (case msg
-      ('update (apply update args))
-      ('kickstart (kickstart))
-      (else (error "Message not understood: " msg)))))
+    (lambda (msg . args)
+      (case msg
+        ('update (apply update args))
+        ('kickstart (kickstart))
+        ('die (die))
+        ('is-dead? is-dead?)
+        (else (error "Message not understood: " msg))))))
 
 
 ;;; Creating all FSMs, states and transitions
@@ -155,10 +164,13 @@
 (bob 'kickstart)
 
 (define (run bob context iteration) 
-    (bob 'update context)
-    (wait-and-listen 10)
-    (context 'update-time 1)
-    (display-characteristic 12 iteration)
-    (run bob context (+ 1 iteration)))
+  ;(bob 'update context)
+  (wait-and-listen 10)
+  (context 'update-time 1)
+  (display-characteristic 12 iteration)
+  (if (not (bob 'is-dead?)) 
+      (run bob context (+ 1 iteration)) 
+      (do-nothing)))
 
 (run bob context 0)
+(bob 'die)
