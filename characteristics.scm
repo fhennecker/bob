@@ -42,7 +42,7 @@
 
     ;;; transitions from a state to the state above
     ; we set the threshold to 1301 because 
-    (happy-state 'add-transition (make-time-evolution-transition > 1301 happy-state 0))
+    (happy-state 'add-transition (make-time-evolution-transition > 1301 happy-state))
     (normal-state 'add-transition (make-time-evolution-transition > HAPPY_NORMAL_THR happy-state))
     (sad-state 'add-transition (make-time-evolution-transition > NORMAL_SAD_THR normal-state))
     (depressed-state 'add-transition (make-time-evolution-transition > SAD_DEPRESSED_THR sad-state))
@@ -126,7 +126,7 @@
 
 (define exhaustion-fsm
   (let ((EXHAUSTION_SPEED 5)
-        (AWAKE_SLEEPY_THR 600)
+        (AWAKE_SLEEPY_THR 500)
         (SLEEPY_EXHAUSTED_THR 200))
 
     ;;; ===== Exhaustion states =====
@@ -152,7 +152,9 @@
       (make-transition 
             'timestep
             (lambda (measure timestep)
-              (measure 'update (* timestep (+ (- EXHAUSTION_SPEED) (round (/ 2 (context 'general-state))))))
+              (if (< (context 'ax) 18200)
+                (measure 'update (* timestep (+ (- EXHAUSTION_SPEED) (round (/ 2 (context 'general-state))))))
+                (measure 'update (* timestep (+ EXHAUSTION_SPEED (round (/ 2 (context 'general-state)))))))              
               (display-characteristic 2 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
@@ -160,4 +162,9 @@
     (awake-state 'add-transition (make-time-evolution-transition < AWAKE_SLEEPY_THR sleepy-state))
     (sleepy-state 'add-transition (make-time-evolution-transition < SLEEPY_EXHAUSTED_THR exhausted-state))
     (exhausted-state 'add-transition (make-time-evolution-transition < -1 exhausted-state))
+
+    (awake-state 'add-transition (make-time-evolution-transition > 1301 awake-state))
+    (sleepy-state 'add-transition (make-time-evolution-transition > AWAKE_SLEEPY_THR awake-state))
+    (exhausted-state 'add-transition (make-time-evolution-transition > SLEEPY_EXHAUSTED_THR sleepy-state))
+
   (make-finite-state-machine awake-state #f)))
