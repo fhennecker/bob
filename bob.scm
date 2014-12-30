@@ -9,6 +9,7 @@
 ;;; Utilities
 (load "utilities.scm")
 
+(clear-screen)
 
 (define (get-input context input-name)
   (assoc input-name context))
@@ -150,7 +151,7 @@
 
 ;;; ===== Main loop and run =====
 (define context (make-context 0 0))
-(define bob (make-bob (list happy-fsm hunger-fsm)))
+(define bob (make-bob (list happiness-fsm hunger-fsm)))
 (bob 'kickstart)
 
 (define (run bob context iteration) 

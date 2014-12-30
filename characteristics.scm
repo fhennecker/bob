@@ -2,39 +2,70 @@
 ;;;                               HAPPINESS
 ;;; ============================================================================
 
-;;; ===== Happiness states =====
-(define sad-state
-  (make-state (lambda () 
-                (newline)(display "You ought to know I'm feeling very depressed"))
-              (lambda ()
-                (newline)(display "I'm feeling a bit better"))))
-(define happy-state
-  (make-state (lambda () 
-                (newline) (display "I am happy now!"))
-              (lambda () 
-                (newline)(display "I am no longer happy :("))))
-                
-;;; ===== Happy state transitions
-(happy-state 'add-transition
-  (make-transition 
-    'timestep
-    (lambda (measure timestep)
-      ;(measure 'update (- timestep)) ; decrement happiness
-      (measure 'update (* timestep (context 'general-state)))
-      (display-characteristic 0 (round (/ (measure 'value) 10)))
-      (if (< (measure 'value) 0) #t #f))
-    sad-state))
+(define happiness-fsm
+  (let ((HAPPY_TO_NORMAL_THRESHOLD 1000)
+        (NORMAL_TO_SAD_THRESHOLD 400)
+        (SAD_TO_DEPRESSED_THRESHOLD 200))
 
-(define play-transition
- (make-transition 
-    'play-button
-    (lambda (measure button)
-      (if (button-pressed? button) #t #f))
-    happy-state))
+    ;;; ===== Happiness states =====
+    (define happy-state
+      (make-state (lambda () 
+                    (fill-rectangle! 0 60 20 20 #x00F))
+                  (lambda () (display "leaving the land of happy people"))))
+    (define normal-state
+      (make-state (lambda () 
+                    (fill-rectangle! 0 60 20 20 #x0F0))
+                  (lambda () 
+                    (newline)(display "I am no longer happy "))))
+    (define sad-state
+      (make-state (lambda () 
+                    (fill-rectangle! 0 60 20 20 #xFC0))
+                  (lambda ()
+                    (newline)(display "I'm feeling a bit better"))))
+    (define depressed-state
+      (make-state (lambda () 
+                    (fill-rectangle! 0 60 20 20 #xF00))
+                  (lambda () 
+                    (newline)(display "I am no longer happy"))))
 
-(happy-state 'add-transition play-transition)
-(sad-state 'add-transition play-transition)
-(define happy-fsm (make-finite-state-machine happy-state))
+    ;;; ===== Happy state transitions =====
+    ; This is a generator of transitions based on time
+    (define (make-time-evolution-transition for-value to-state real-state)
+      (make-transition 
+        'timestep
+        (lambda (measure timestep)
+          ;(measure 'update (- timestep)) ; decrement happiness
+          (measure 'update (* timestep (context 'general-state)))
+          (display-characteristic 0 (round (/ (measure 'value) 10)))
+          (if ((if (eq? to-state 'up) > <) (measure 'value) for-value) #t #f))
+        ; defining which state we need to transition to 
+        real-state))
+
+    ;;; transitions from a state to the state below 
+    (happy-state 'add-transition (make-time-evolution-transition HAPPY_TO_NORMAL_THRESHOLD 'down normal-state))
+    (normal-state 'add-transition (make-time-evolution-transition NORMAL_TO_SAD_THRESHOLD 'down sad-state))
+    (sad-state 'add-transition (make-time-evolution-transition SAD_TO_DEPRESSED_THRESHOLD 'down depressed-state))
+    ; we set the threshold to -1 because whe should never get out of depression by waiting
+    (depressed-state 'add-transition (make-time-evolution-transition -1 'down depressed-state))
+
+    ;;; transitions from a state to the state above
+    ; we set the threshold to 1301 because 
+    (happy-state 'add-transition (make-time-evolution-transition 1301 'up happy-state))
+    (normal-state 'add-transition (make-time-evolution-transition HAPPY_TO_NORMAL_THRESHOLD 'up happy-state))
+    (sad-state 'add-transition (make-time-evolution-transition NORMAL_TO_SAD_THRESHOLD 'up normal-state))
+    (depressed-state 'add-transition (make-time-evolution-transition SAD_TO_DEPRESSED_THRESHOLD 'up sad-state))
+
+    ; (define play-transition
+    ;  (make-transition 
+    ;     'play-button
+    ;     (lambda (measure button)
+    ;       (if (button-pressed? button) #t #f))
+    ;     happy-state))
+
+    ; (happy-state 'add-transition play-transition)
+    ; (sad-state 'add-transition play-transition)
+
+    (make-finite-state-machine happy-state)))
 
 
 ;;; ============================================================================
@@ -104,7 +135,7 @@
             (if (> (measure 'value) FED_TO_HUNGRY_THRESHOLD) #t #f))
         fed-state))
 
-    ;;; ===== Unfed state transitions =====
+    ;;; ===== Starving state transitions =====
     ;;; Getting hungry over time
     (starving-state 'add-transition
       (make-transition
