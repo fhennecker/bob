@@ -79,16 +79,19 @@
     ;;; ===== Hunger states =====
     (define fed-state 
       (make-state (lambda ()
+                    (fill-rectangle! 20 60 20 20 #x0F0)
                     (context 'update-general-state 2))
                   (lambda ()
                     (context 'update-general-state -2))))
     (define hungry-state
       (make-state (lambda ()
+                    (fill-rectangle! 20 60 20 20 #xFC0)
                     (context 'update-general-state -2))
                   (lambda ()
                     (context 'update-general-state 2))))
     (define starving-state
       (make-state (lambda ()
+                    (fill-rectangle! 20 60 20 20 #xF00)
                     (context 'update-general-state -5))
                   (lambda ()
                     (context 'update-general-state 5))))
