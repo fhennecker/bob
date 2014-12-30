@@ -32,6 +32,8 @@
     (set! button1-previous-value button1-current-value)
     (set! button1-current-value (is-pin-set? b1)))
   (define (button1-pressed?) (and (eq? #f button1-previous-value) (eq? #t button1-current-value)))
+  (define (ax) (pulse_in ax)) ; accelerometer x
+  (define (ay) (pulse_in ay)) ; accelerometer y
   (lambda (msg . args)
     (case msg
       ('time time)
@@ -41,6 +43,8 @@
       ('update-time (apply update-time args))
       ('update-buttons (update-buttons))
       ('button1-pressed? (button1-pressed?))
+      ('ax (ax))
+      ('ay (ay))
       (else #f))))) ; no such context variable
 
 
