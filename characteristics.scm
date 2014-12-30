@@ -119,3 +119,45 @@
     ;;; Returning the hunger FSM
     (make-finite-state-machine fed-state #t)))
 
+
+;;; ============================================================================
+;;;                               EXHAUSTION
+;;; ============================================================================
+
+(define exhaustion-fsm
+  (let ((EXHAUSTION_SPEED 5)
+        (AWAKE_SLEEPY_THR 600)
+        (SLEEPY_EXHAUSTED_THR 200))
+
+    ;;; ===== Exhaustion states =====
+
+    (define awake-state 
+      (make-state (lambda ()
+                    (fill-rectangle! 40 60 20 20 #x0F0)
+                    (context 'update-general-state 1))
+                  (lambda () (context 'update-general-state -1))))
+    (define sleepy-state
+      (make-state (lambda ()
+                    (fill-rectangle! 40 60 20 20 #xFC0)
+                    (context 'update-general-state -2))
+                  (lambda () (context 'update-general-state 2))))
+    (define exhausted-state
+      (make-state (lambda ()
+                    (fill-rectangle! 40 60 20 20 #xF00)
+                    (context 'update-general-state -5))
+                  (lambda () (context 'update-general-state 5))))
+
+    ;;; ===== Exhaustion transitions =====
+    (define (make-time-evolution-transition predicate threshold to-state)
+      (make-transition 
+            'timestep
+            (lambda (measure timestep)
+              (measure 'update (* timestep (+ (- EXHAUSTION_SPEED) (round (/ 2 (context 'general-state))))))
+              (display-characteristic 2 (round (/ (measure 'value) 10)))
+              (if (predicate (measure 'value) threshold) #t #f))
+            to-state))
+
+    (awake-state 'add-transition (make-time-evolution-transition < AWAKE_SLEEPY_THR sleepy-state))
+    (sleepy-state 'add-transition (make-time-evolution-transition < SLEEPY_EXHAUSTED_THR exhausted-state))
+    (exhausted-state 'add-transition (make-time-evolution-transition < -1 exhausted-state))
+  (make-finite-state-machine awake-state #f)))
