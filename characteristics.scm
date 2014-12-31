@@ -27,8 +27,8 @@
     (define (make-time-evolution-transition predicate threshold to-state)
       (make-transition 
             'timestep
-            (lambda (measure timestep)
-              (measure 'update (* timestep (context 'general-state)))
+            (lambda (measure)
+              (measure 'update (* (context 'timestep) (context 'general-state)))
               (display-characteristic 0 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
@@ -41,7 +41,6 @@
     (depressed-state 'add-transition (make-time-evolution-transition < -1 depressed-state))
 
     ;;; transitions from a state to the state above
-    ; we set the threshold to 1301 because 
     (happy-state 'add-transition (make-time-evolution-transition > 1301 happy-state))
     (normal-state 'add-transition (make-time-evolution-transition > HAPPY_NORMAL_THR happy-state))
     (sad-state 'add-transition (make-time-evolution-transition > NORMAL_SAD_THR normal-state))
@@ -92,17 +91,23 @@
     (define (make-time-evolution-transition predicate threshold to-state)
       (make-transition 
             'timestep
-            (lambda (measure timestep)
-              (measure 'update (* timestep (- HUNGER_SPEED)))
+            (lambda (measure)
+              (measure 'update (* (context 'timestep) (- HUNGER_SPEED)))
               (display-characteristic 1 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
     (define (make-feeding-transition threshold to-state)
       (make-transition
-        'button1-pressed?
-        (lambda (measure button1-pressed?)
-          (if button1-pressed? (measure 'update 100) (do-nothing))
+        'button0-pressed?
+        (lambda (measure)
+          (define (choose-meal)
+            (context 'update-buttons)
+            (cond ((context 'button-pressed? 0) (measure 'update 50))
+                  ((context 'button-pressed? 1) (measure 'update 100))
+                  ((context 'button-pressed? 2) (measure 'update 200))
+                  (else (choose-meal))))
+          (choose-meal)
           (display-characteristic 1 (round (/ (measure 'value) 10)))
           (if (> (measure 'value) threshold) #t #f))
         to-state))
@@ -151,10 +156,10 @@
     (define (make-time-evolution-transition predicate threshold to-state)
       (make-transition 
             'timestep
-            (lambda (measure timestep)
+            (lambda (measure)
               (if (> (context 'ax) 18200)
-                (measure 'update (* timestep (- EXHAUSTION_SPEED)))
-                (measure 'update (* timestep EXHAUSTION_SPEED)))
+                (measure 'update (* (context 'timestep) (- EXHAUSTION_SPEED)))
+                (measure 'update (* (context 'timestep) EXHAUSTION_SPEED)))
               (display-characteristic 2 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))

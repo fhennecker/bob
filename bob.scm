@@ -14,14 +14,25 @@
 (define (get-input context input-name)
   (assoc input-name context))
 (define input-value cdr)
-(define (button-pressed? button)
-  (eq? button 'pressed))
+
+(define (make-button object)
+  (let ((prev (is-pin-set? object))
+        (current (is-pin-set? object)))
+    (define (update)
+      (set! prev current)
+      (set! current (is-pin-set? object)))
+    (lambda (msg . args)
+      (case msg
+        ('prev prev)
+        ('is-on? current)
+        ('update (update))
+        (else (error))))
+  ))
 
 ;;; ===== Context =====
 ;;; Creating standard context structure
 (define (make-context time general-state)
-  (let ((button1-current-value (is-pin-set? b1))
-        (button1-previous-value (is-pin-set? b1))
+  (let ((buttons (list (make-button b0) (make-button b1) (make-button b2)))
         (timestep 1))
   (define (update-general-state value)
     (set! general-state (+ general-state value)))
@@ -29,9 +40,9 @@
     (set! time (+ time value))
     (set! timestep value)) ; remembering the last timestep
   (define (update-buttons) 
-    (set! button1-previous-value button1-current-value)
-    (set! button1-current-value (is-pin-set? b1)))
-  (define (button1-pressed?) (and (eq? #f button1-previous-value) (eq? #t button1-current-value)))
+    (map (lambda(b) (b 'update)) buttons))
+  (define (button-pressed? button) 
+    (and (eq? #f ((list-ref buttons button) 'prev)) ((list-ref buttons button) 'is-on?)))
   (lambda (msg . args)
     (case msg
       ('time time)
@@ -40,7 +51,10 @@
       ('update-general-state (apply update-general-state args))
       ('update-time (apply update-time args))
       ('update-buttons (update-buttons))
-      ('button1-pressed? (button1-pressed?))
+      ('button0-pressed? (button-pressed? 0))
+      ('button1-pressed? (button-pressed? 1))
+      ('button2-pressed? (button-pressed? 2))
+      ('button-pressed? (apply button-pressed? args))
       ('ax (pulse_in ax))
       ('ay (pulse_in ay))
       (else #f))))) ; no such context variable
@@ -70,7 +84,7 @@
       (for-each (lambda (transition)
   		  (let ((input (context (transition-input-name transition))))
   		    (if (and input
-  			           ((transition-predicate transition) measure input))
+  			           ((transition-predicate transition) measure))
   			      (change-state (transition-state transition))
               (do-nothing))))
   		  current-transitions))
