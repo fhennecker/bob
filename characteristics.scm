@@ -152,9 +152,9 @@
       (make-transition 
             'timestep
             (lambda (measure timestep)
-              (if (< (context 'ax) 18200)
-                (measure 'update (* timestep (+ (- EXHAUSTION_SPEED) (round (/ 2 (context 'general-state))))))
-                (measure 'update (* timestep (+ EXHAUSTION_SPEED (round (/ 2 (context 'general-state)))))))              
+              (if (> (context 'ax) 18200)
+                (measure 'update (* timestep (- EXHAUSTION_SPEED)))
+                (measure 'update (* timestep EXHAUSTION_SPEED)))
               (display-characteristic 2 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))

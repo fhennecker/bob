@@ -9,6 +9,7 @@
 
 (define (wait-and-listen n)
   (context 'update-buttons)
+  (display-characteristic 11 (* n 10))
   (if (not (bob 'is-dead?))
   	(bob 'update context)
   	(do-nothing))

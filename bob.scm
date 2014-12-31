@@ -32,8 +32,6 @@
     (set! button1-previous-value button1-current-value)
     (set! button1-current-value (is-pin-set? b1)))
   (define (button1-pressed?) (and (eq? #f button1-previous-value) (eq? #t button1-current-value)))
-  (define (ax) (pulse_in ax)) ; accelerometer x
-  (define (ay) (pulse_in ay)) ; accelerometer y
   (lambda (msg . args)
     (case msg
       ('time time)
@@ -43,8 +41,8 @@
       ('update-time (apply update-time args))
       ('update-buttons (update-buttons))
       ('button1-pressed? (button1-pressed?))
-      ('ax (ax))
-      ('ay (ay))
+      ('ax (pulse_in ax))
+      ('ay (pulse_in ay))
       (else #f))))) ; no such context variable
 
 
@@ -54,46 +52,46 @@
         (current-transitions (start-state 'transitions))
         (measure-value 1000)) ; default value measuring the state of one characteristic
 
-  (define (update-value value)
-    (set! measure-value (min 1300 (max 0 (+ measure-value value))))
-    (if (and deathly (eq? measure-value 0)) (bob 'die) (do-nothing)))
-  (define (measure msg . args)
-    (case msg
-      ('value measure-value)
-      ('update (apply update-value args))))
+    (define (update-value value)
+      (set! measure-value (min 1300 (max 0 (+ measure-value value))))
+      (if (and deathly (eq? measure-value 0)) (bob 'die) (do-nothing)))
+    (define (measure msg . args)
+      (case msg
+        ('value measure-value)
+        ('update (apply update-value args))))
 
-  ;;; get the name of all input channels needed by the current state's transitions
-  (define (get-transition-inputs)
-    (map transition-input-name current-transitions))
+    ;;; get the name of all input channels needed by the current state's transitions
+    (define (get-transition-inputs)
+      (map transition-input-name current-transitions))
 
-  ;;; feed the FSM with current context
-  (define (feed-context context)
-    ;; will trigger all transitions that satisfy their predicate with given context
-    (for-each (lambda (transition)
-		  (let ((input (context (transition-input-name transition))))
-		    (if (and input
-			           ((transition-predicate transition) measure input))
-			      (change-state (transition-state transition))
-            (do-nothing))))
-		  current-transitions))
+    ;;; feed the FSM with current context
+    (define (feed-context context)
+      ;; will trigger all transitions that satisfy their predicate with given context
+      (for-each (lambda (transition)
+  		  (let ((input (context (transition-input-name transition))))
+  		    (if (and input
+  			           ((transition-predicate transition) measure input))
+  			      (change-state (transition-state transition))
+              (do-nothing))))
+  		  current-transitions))
 
-  (define (change-state new-state)
-;      (if (not (equal? new-state current-state)) ; check for transition to itself
-	  (begin 
-	    (current-state 'exit-action)
-	    (new-state 'entry-action)
-	    (set! current-transitions (new-state 'transitions))
-	    (set! current-state new-state)))
+    (define (change-state new-state)
+  ;      (if (not (equal? new-state current-state)) ; check for transition to itself
+  	  (begin 
+  	    (current-state 'exit-action)
+  	    (new-state 'entry-action)
+  	    (set! current-transitions (new-state 'transitions))
+  	    (set! current-state new-state)))
 
-  (define (kickstart)
-    (current-state 'entry-action))
+    (define (kickstart)
+      (current-state 'entry-action))
 
-  (lambda (msg . args)
-    (case msg
-      ('feed-context (apply feed-context args))
-      ('get-inputs (get-transition-inputs))
-      ('kickstart (kickstart))
-      (else (error "Msg not understood: " msg))))))
+    (lambda (msg . args)
+      (case msg
+        ('feed-context (apply feed-context args))
+        ('get-inputs (get-transition-inputs))
+        ('kickstart (kickstart))
+        (else (error "Msg not understood: " msg))))))
 
 
 ;;; ===== Transitions =====
@@ -168,7 +166,6 @@
 (bob 'kickstart)
 
 (define (run bob context iteration) 
-  ;(bob 'update context)
   (wait-and-listen 10)
   (context 'update-time 1)
   (display-characteristic 12 iteration)
