@@ -22,7 +22,7 @@
 (define (make-context time general-state)
   (let ((button1-current-value (is-pin-set? b1))
         (button1-previous-value (is-pin-set? b1))
-        (timestep 0))
+        (timestep 1))
   (define (update-general-state value)
     (set! general-state (+ general-state value)))
   (define (update-time value)
