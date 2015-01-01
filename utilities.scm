@@ -30,6 +30,7 @@
 ; single led l blinking i times
 (define (blinkled l i)
 	(context 'led-on l)
-	(wait 3000)
+	(wait 2000)
 	(context 'led-off l)
+	(wait 3000)
 	(if (eq? i 0) (do-nothing) (blinkled l (- i 1))))
