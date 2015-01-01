@@ -14,3 +14,22 @@
   	(bob 'update context)
   	(do-nothing))
   (if (eq? n 0) '() (wait-and-listen (- n 1))))
+
+; all leds flashing one after the other 5 times
+(define (led-animation)
+	(define (blinkloop i)
+		(context 'led-on i)
+		(wait 2000)
+		(context 'led-off i)
+		(if (eq? i 0) (do-nothing) (blinkloop (- i 1))))
+	(define (looploop l)
+		(blinkloop 2)
+		(if (eq? l 0) (do-nothing) (looploop (- l 1))))
+	(looploop 4))
+
+; single led l blinking i times
+(define (blinkled l i)
+	(context 'led-on l)
+	(wait 3000)
+	(context 'led-off l)
+	(if (eq? i 0) (do-nothing) (blinkled l (- i 1))))
