@@ -35,16 +35,16 @@
 
     (define (make-play-transition predicate threshold to-state)
       (make-transition
-        'button1-pressed?
+        'button1-pressed? ; play button triggered
         (lambda (measure)
           (context 'update-buttons) ; unpressing the play button
           (led-animation)
-          (let ((picked-led (modulo (context 'ax) 3)))
+          (let ((picked-led (modulo (context 'ax) 3))) ; picking "random" value
             (define (win)
               (blinkled picked-led 2) (context 'update-buttons) (measure 'update 200))
             (define (lose)
               (blinkled picked-led 2) (context 'update-buttons) (measure 'update (- 40)))
-            (define (wait-for-button)
+            (define (wait-for-button) ; listening for any button press
               (context 'update-buttons)
               (cond ((or (and (eq? picked-led 0) (context 'button-pressed? 0))
                          (and (eq? picked-led 1) (context 'button-pressed? 1))
