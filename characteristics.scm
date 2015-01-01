@@ -104,7 +104,10 @@
             ; it doesn't transition to some other state in another fsm
             (cond ((context 'button-pressed? 0) (measure 'update 50) (context 'update-buttons))
                   ((context 'button-pressed? 1) (measure 'update 100) (context 'update-buttons))
-                  ((context 'button-pressed? 2) (measure 'update 300) (context 'update-buttons))
+                  ((context 'button-pressed? 2) 
+                    (measure 'update 300) 
+                    (health-fsm 'update-measure (- 100))
+                    (context 'update-buttons))
                   (else (choose-meal))))
           (choose-meal)
           (display-characteristic 1 (round (/ (measure 'value) 10)))

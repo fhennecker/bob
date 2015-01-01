@@ -108,6 +108,7 @@
         ('feed-context (apply feed-context args))
         ('get-inputs (get-transition-inputs))
         ('kickstart (kickstart))
+        ('update-measure (apply update-value args))
         (else (error "Msg not understood: " msg))))))
 
 
