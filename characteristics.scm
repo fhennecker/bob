@@ -33,15 +33,31 @@
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
-    (define (make-play-transition)
+    (define (make-play-transition predicate threshold to-state)
       (make-transition
         'button1-pressed?
         (lambda (measure)
-          (context 'update-buttons)
-          (display "before")(newline)
+          (context 'update-buttons) ; unpressing the play button
           (led-animation)
-          (display "after")(newline))
-        happy-state))
+          (let ((picked-led (modulo (context 'ax) 3)))
+            (define (win)
+              (blinkled picked-led 2) (context 'update-buttons) (measure 'update 200))
+            (define (lose)
+              (blinkled picked-led 2) (context 'update-buttons) (measure 'update (- 40)))
+            (define (wait-for-button)
+              (context 'update-buttons)
+              (cond ((or (and (eq? picked-led 0) (context 'button-pressed? 0))
+                         (and (eq? picked-led 1) (context 'button-pressed? 1))
+                         (and (eq? picked-led 2) (context 'button-pressed? 2)))
+                      (win))
+                    ; pushed on the wrong button
+                    ((or (context 'button-pressed? 0) (context 'button-pressed? 1) (context 'button-pressed? 2))
+                      (lose))
+                    ; no button pressed
+                    (else (wait-for-button))))
+            (wait-for-button))
+          (if (predicate (measure 'value) threshold) #t #f))
+        to-state))
 
     ;;; transitions from a state to the state below 
     (happy-state 'add-transition (make-time-evolution-transition < HAPPY_NORMAL_THR normal-state))
@@ -53,10 +69,14 @@
     (sad-state 'add-transition (make-time-evolution-transition > NORMAL_SAD_THR normal-state))
     (depressed-state 'add-transition (make-time-evolution-transition > SAD_DEPRESSED_THR sad-state))
 
-    (happy-state 'add-transition (make-play-transition))
-    (normal-state 'add-transition (make-play-transition))
-    (sad-state 'add-transition (make-play-transition))
-    (depressed-state 'add-transition (make-play-transition))
+    ;;; play transitions
+    (happy-state 'add-transition (make-play-transition < HAPPY_NORMAL_THR normal-state))
+    (normal-state 'add-transition (make-play-transition < NORMAL_SAD_THR sad-state))
+    (sad-state 'add-transition (make-play-transition < SAD_DEPRESSED_THR depressed-state))
+  
+    (normal-state 'add-transition (make-play-transition > HAPPY_NORMAL_THR happy-state))
+    (sad-state 'add-transition (make-play-transition > NORMAL_SAD_THR normal-state))    
+    (depressed-state 'add-transition (make-play-transition > SAD_DEPRESSED_THR sad-state))
 
     (make-finite-state-machine happy-state #f)))
 
