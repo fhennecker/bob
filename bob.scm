@@ -33,6 +33,7 @@
 ;;; Creating standard context structure
 (define (make-context time general-state)
   (let ((buttons (list (make-button b0) (make-button b1) (make-button b2)))
+        (leds (list l0 l1 l2))
         (timestep 1))
   (define (update-general-state value)
     (set! general-state (+ general-state value)))
@@ -43,6 +44,10 @@
     (map (lambda(b) (b 'update)) buttons))
   (define (button-pressed? button) 
     (and (eq? #f ((list-ref buttons button) 'prev)) ((list-ref buttons button) 'is-on?)))
+  (define (led-on id)
+    (set-pin! (list-ref leds id)))
+  (define (led-off id)
+    (clear-pin! (list-ref leds id)))
   (lambda (msg . args)
     (case msg
       ('time time)
@@ -55,6 +60,8 @@
       ('button1-pressed? (button-pressed? 1))
       ('button2-pressed? (button-pressed? 2))
       ('button-pressed? (apply button-pressed? args))
+      ('led-on (apply led-on args))
+      ('led-off (apply led-off args))
       ('ax (pulse_in ax))
       ('ay (pulse_in ay))
       (else #f))))) ; no such context variable
