@@ -105,7 +105,7 @@
             (context 'update-buttons)
             (cond ((context 'button-pressed? 0) (measure 'update 50))
                   ((context 'button-pressed? 1) (measure 'update 100))
-                  ((context 'button-pressed? 2) (measure 'update 200))
+                  ((context 'button-pressed? 2) (measure 'update 300))
                   (else (choose-meal))))
           (choose-meal)
           (display-characteristic 1 (round (/ (measure 'value) 10)))
