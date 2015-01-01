@@ -174,4 +174,62 @@
     (sleepy-state 'add-transition (make-time-evolution-transition > AWAKE_SLEEPY_THR awake-state))
     (exhausted-state 'add-transition (make-time-evolution-transition > SLEEPY_EXHAUSTED_THR sleepy-state))
 
-  (make-finite-state-machine awake-state #f)))
+  (make-finite-state-machine awake-state #t)))
+
+;;; ============================================================================
+;;;                                  HEALTH
+;;; ============================================================================
+
+(define health-fsm
+  (let ((HEALTHY_ILL_THR 400)
+        (CURE_VALUE 200)
+        (MEDICATION_OVERLOAD_THR 600)
+        (MEDICATION_WEAROUT_SPEED 3)
+        (medication-amount 0)) ; taking too much medication in not enough time is dangerous!
+
+    ;;; ===== Health states =====
+
+    (define healthy-state 
+      (make-state (lambda ()
+                    (fill-rectangle! 60 60 20 20 #x0F0)
+                    (context 'update-general-state 1))
+                  (lambda () (context 'update-general-state -1))))
+    (define ill-state
+      (make-state (lambda ()
+                    (fill-rectangle! 60 60 20 20 #xF00)
+                    (context 'update-general-state -5))
+                  (lambda () (context 'update-general-state 5))))
+
+    ;;; ===== Health transitions =====
+
+    ; This transition doesn't update measure itself, but it checks if we didn't
+    ; give too much medication to the pet
+    (define (make-time-evolution-transition)
+      (make-transition 
+            'timestep
+            (lambda (measure)
+              (set! medication-amount (- medication-amount (* MEDICATION_WEAROUT_SPEED (context 'timestep))))
+              (display-characteristic 4 (round (/ medication-amount 10)))
+              #f)
+            healthy-state)) ; dummy state
+
+    (define (make-cure-transition predicate threshold to-state)
+      (make-transition
+        'button2-pressed?
+        (lambda (measure)
+          (if (context 'button-pressed? 2) 
+              (begin  (measure 'update 200)
+                      (set! medication-amount (+ medication-amount 200))) 
+              (do-nothing))
+          (if (> medication-amount MEDICATION_OVERLOAD_THR) (measure 'update (- 400)) (do-nothing))
+          (display-characteristic 3 (round (/ (measure 'value) 10)))
+          if (predicate (measure 'value) threshold #t #f))
+        to-state))
+
+    (healthy-state 'add-transition (make-time-evolution-transition))
+    (ill-state 'add-transition (make-time-evolution-transition))
+
+    (healthy-state 'add-transition (make-cure-transition < HEALTHY_ILL_THR ill-state))
+    (ill-state 'add-transition (make-cure-transition > HEALTHY_ILL_THR healthy-state))
+
+  (make-finite-state-machine healthy-state #t)))

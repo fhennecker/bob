@@ -176,7 +176,7 @@
 
 ;;; ===== Main loop and run =====
 (define context (make-context 0 0))
-(define bob (make-bob (list happiness-fsm hunger-fsm exhaustion-fsm)))
+(define bob (make-bob (list happiness-fsm hunger-fsm exhaustion-fsm health-fsm)))
 (bob 'kickstart)
 
 (define (run bob context iteration) 
