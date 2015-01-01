@@ -1,5 +1,5 @@
 ;;; ============================================================================
-;;;                               HAPPINESS
+;;;                                HAPPINESS
 ;;; ============================================================================
 
 (define happiness-fsm
@@ -128,7 +128,7 @@
 
 
 ;;; ============================================================================
-;;;                               EXHAUSTION
+;;;                                 EXHAUSTION
 ;;; ============================================================================
 
 (define exhaustion-fsm
@@ -233,3 +233,37 @@
     (ill-state 'add-transition (make-cure-transition > HEALTHY_ILL_THR healthy-state))
 
   (make-finite-state-machine healthy-state #t)))
+
+;;; ============================================================================
+;;;                                 COMPLIANCE
+;;; ============================================================================
+
+(define compliance-fsm
+  (let ((SUBMISSIVE_REBELLIOUS_THR 500))
+
+    ;;; ===== Compliance states =====
+
+    (define submissive-state 
+      (make-state (lambda ()
+                    (fill-rectangle! 80 60 20 20 #x0F0))
+                  (lambda () (do-nothing))))
+    (define rebellious-state
+      (make-state (lambda ()
+                    (fill-rectangle! 80 60 20 20 #xF00))
+                  (lambda () (do-nothing))))
+
+    ;;; ===== Compliance transitions =====
+
+    (define (make-time-evolution-transition predicate threshold to-state)
+      (make-transition 
+            'timestep
+            (lambda (measure)
+              (measure 'set (+ 800 (* 100 (context 'general-state))))
+              (display-characteristic 5 (round (/ (measure 'value) 10)))
+              (if (predicate (measure 'value) threshold) #t #f))
+            to-state))
+
+    (submissive-state 'add-transition (make-time-evolution-transition < SUBMISSIVE_REBELLIOUS_THR rebellious-state))
+    (rebellious-state 'add-transition (make-time-evolution-transition > SUBMISSIVE_REBELLIOUS_THR submissive-state))
+  
+  (make-finite-state-machine submissive-state #f)))
