@@ -33,6 +33,16 @@
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
+    (define (make-play-transition)
+      (make-transition
+        'button1-pressed?
+        (lambda (measure)
+          (context 'update-buttons)
+          (display "before")(newline)
+          (led-animation)
+          (display "after")(newline))
+        happy-state))
+
     ;;; transitions from a state to the state below 
     (happy-state 'add-transition (make-time-evolution-transition < HAPPY_NORMAL_THR normal-state))
     (normal-state 'add-transition (make-time-evolution-transition < NORMAL_SAD_THR sad-state))
@@ -43,15 +53,10 @@
     (sad-state 'add-transition (make-time-evolution-transition > NORMAL_SAD_THR normal-state))
     (depressed-state 'add-transition (make-time-evolution-transition > SAD_DEPRESSED_THR sad-state))
 
-    ; (define play-transition
-    ;  (make-transition 
-    ;     'play-button
-    ;     (lambda (measure button)
-    ;       (if (button-pressed? button) #t #f))
-    ;     happy-state))
-
-    ; (happy-state 'add-transition play-transition)
-    ; (sad-state 'add-transition play-transition)
+    (happy-state 'add-transition (make-play-transition))
+    (normal-state 'add-transition (make-play-transition))
+    (sad-state 'add-transition (make-play-transition))
+    (depressed-state 'add-transition (make-play-transition))
 
     (make-finite-state-machine happy-state #f)))
 
@@ -106,7 +111,7 @@
                   ((context 'button-pressed? 1) (measure 'update 100) (context 'update-buttons))
                   ((context 'button-pressed? 2) 
                     (measure 'update 300) 
-                    (health-fsm 'update-measure (- 100))
+                    (health-fsm 'update-measure (- 50))
                     (context 'update-buttons))
                   (else (choose-meal))))
           (choose-meal)
