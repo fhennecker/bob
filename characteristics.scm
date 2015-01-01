@@ -37,11 +37,8 @@
     (happy-state 'add-transition (make-time-evolution-transition < HAPPY_NORMAL_THR normal-state))
     (normal-state 'add-transition (make-time-evolution-transition < NORMAL_SAD_THR sad-state))
     (sad-state 'add-transition (make-time-evolution-transition < SAD_DEPRESSED_THR depressed-state))
-    ; we set the threshold to -1 because whe should never get out of depression by waiting
-    (depressed-state 'add-transition (make-time-evolution-transition < -1 depressed-state))
 
     ;;; transitions from a state to the state above
-    (happy-state 'add-transition (make-time-evolution-transition > 1301 happy-state))
     (normal-state 'add-transition (make-time-evolution-transition > HAPPY_NORMAL_THR happy-state))
     (sad-state 'add-transition (make-time-evolution-transition > NORMAL_SAD_THR normal-state))
     (depressed-state 'add-transition (make-time-evolution-transition > SAD_DEPRESSED_THR sad-state))
@@ -115,6 +112,8 @@
         to-state))
 
     (fed-state 'add-transition (make-time-evolution-transition < FED_HUNGRY_THR hungry-state))
+    ; the change-state predicate will never be true since feeding only transitions to
+    ; upper states and fed-state is the highest state.
     (fed-state 'add-transition (make-feeding-transition 1301 fed-state))
 
     (hungry-state 'add-transition (make-time-evolution-transition < HUNGRY_STARVING_THR starving-state))
@@ -168,9 +167,7 @@
 
     (awake-state 'add-transition (make-time-evolution-transition < AWAKE_SLEEPY_THR sleepy-state))
     (sleepy-state 'add-transition (make-time-evolution-transition < SLEEPY_EXHAUSTED_THR exhausted-state))
-    (exhausted-state 'add-transition (make-time-evolution-transition < -1 exhausted-state))
 
-    (awake-state 'add-transition (make-time-evolution-transition > 1301 awake-state))
     (sleepy-state 'add-transition (make-time-evolution-transition > AWAKE_SLEEPY_THR awake-state))
     (exhausted-state 'add-transition (make-time-evolution-transition > SLEEPY_EXHAUSTED_THR sleepy-state))
 
