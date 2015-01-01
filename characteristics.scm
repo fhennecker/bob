@@ -207,6 +207,7 @@
             (lambda (measure)
               (set! medication-amount (min 1300 (max 0 (- medication-amount (* MEDICATION_WEAROUT_SPEED (context 'timestep))))))
               (display-characteristic 4 (round (/ medication-amount 10)))
+              (display-characteristic 3 (round (/ (measure 'value) 10)))
               #f)
             healthy-state)) ; dummy state
 
