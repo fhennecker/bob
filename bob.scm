@@ -69,10 +69,13 @@
     (define (update-value value)
       (set! measure-value (min 1300 (max 0 (+ measure-value value))))
       (if (and deathly (eq? measure-value 0)) (bob 'die) (do-nothing)))
+    (define (set-measure value)
+      (set! measure-value (min 1300 (max 0 value))))
     (define (measure msg . args)
       (case msg
         ('value measure-value)
-        ('update (apply update-value args))))
+        ('update (apply update-value args))
+        ('set (apply set-measure args))))
 
     ;;; get the name of all input channels needed by the current state's transitions
     (define (get-transition-inputs)
