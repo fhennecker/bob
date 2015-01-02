@@ -270,15 +270,17 @@
     ;;; ===== Health states =====
 
     (define healthy-state 
-      (make-state (lambda () (context 'update-general-state 1))
+      (make-state (lambda ()  (context 'update-general-state 1)
+                              (set! bob-eyes-color #xFFF))
                   (lambda () (context 'update-general-state -1))
                   'healthy
-                  (lambda () (fill-rectangle! 60 60 20 20 #x0F0))))
+                  (lambda () (do-nothing))))
     (define ill-state
-      (make-state (lambda () (context 'update-general-state -5))
+      (make-state (lambda ()  (context 'update-general-state -5)
+                              (set! bob-eyes-color #x0F0))
                   (lambda () (context 'update-general-state 5))
                   'ill
-                  (lambda () (fill-rectangle! 60 60 20 20 #xF00))))
+                  (lambda () (do-nothing))))
 
     ;;; ===== Health transitions =====
 
