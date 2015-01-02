@@ -10,17 +10,25 @@
     ;;; ===== Happiness states =====
 
     (define happy-state
-      (make-state (lambda () (fill-rectangle! 0 60 20 20 #x00F))
-                  (lambda () (do-nothing))))
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'happy 
+                  (lambda () (fill-rectangle! 0 60 20 20 #x00F))))
     (define normal-state
-      (make-state (lambda () (fill-rectangle! 0 60 20 20 #x0F0))
-                  (lambda () (do-nothing))))
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'normal 
+                  (lambda () (fill-rectangle! 0 60 20 20 #x0F0))))
     (define sad-state
-      (make-state (lambda () (fill-rectangle! 0 60 20 20 #xFC0))
-                  (lambda () (do-nothing))))
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'sad 
+                  (lambda () (fill-rectangle! 0 60 20 20 #xFC0))))
     (define depressed-state
-      (make-state (lambda () (fill-rectangle! 0 60 20 20 #xF00))
-                  (lambda () (do-nothing))))
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'depressed 
+                  (lambda () (fill-rectangle! 0 60 20 20 #xF00))))
 
     ;;; ===== Happiness transitions =====
 
@@ -96,20 +104,20 @@
     ;;; ===== Hunger states =====
 
     (define fed-state 
-      (make-state (lambda ()
-                    (fill-rectangle! 20 60 20 20 #x0F0)
-                    (context 'update-general-state 2))
-                  (lambda () (context 'update-general-state -2))))
+      (make-state (lambda () (context 'update-general-state 2))
+                  (lambda () (context 'update-general-state -2))
+                  'fed
+                  (lambda () (fill-rectangle! 20 60 20 20 #x0F0))))
     (define hungry-state
-      (make-state (lambda ()
-                    (fill-rectangle! 20 60 20 20 #xFC0)
-                    (context 'update-general-state -2))
-                  (lambda () (context 'update-general-state 2))))
+      (make-state (lambda () (context 'update-general-state -2))
+                  (lambda () (context 'update-general-state 2))
+                  'hungry
+                  (lambda () (fill-rectangle! 20 60 20 20 #xFC0))))
     (define starving-state
-      (make-state (lambda ()
-                    (fill-rectangle! 20 60 20 20 #xF00)
-                    (context 'update-general-state -5))
-                  (lambda () (context 'update-general-state 5))))
+      (make-state (lambda () (context 'update-general-state -5))
+                  (lambda () (context 'update-general-state 5))
+                  'starving
+                  (lambda () (fill-rectangle! 20 60 20 20 #xF00))))
 
     ;;; ===== Hunger transitions =====
 
@@ -171,27 +179,25 @@
     ;;; ===== Exhaustion states =====
 
     (define awake-state 
-      (make-state (lambda ()
-                    (fill-rectangle! 40 60 20 20 #x0F0)
-                    (context 'update-general-state 1))
+      (make-state (lambda () (context 'update-general-state 1))
                   (lambda () (context 'update-general-state -1))
-                  'awake))
+                  'awake
+                  (lambda () (fill-rectangle! 40 60 20 20 #x0F0))))
     (define sleepy-state
-      (make-state (lambda ()
-                    (fill-rectangle! 40 60 20 20 #xFC0)
-                    (context 'update-general-state -2))
+      (make-state (lambda () (context 'update-general-state -2))
                   (lambda () (context 'update-general-state 2))
-                  'sleepy))
+                  'sleepy
+                  (lambda () (fill-rectangle! 40 60 20 20 #xFC0))))
     (define exhausted-state
-      (make-state (lambda ()
-                    (fill-rectangle! 40 60 20 20 #xF00)
-                    (context 'update-general-state -5))
+      (make-state (lambda () (context 'update-general-state -5))
                   (lambda () (context 'update-general-state 5))
-                  'exhausted))
+                  'exhausted
+                  (lambda () (fill-rectangle! 40 60 20 20 #xF00))))
     (define asleep-state
       (make-state (lambda () (bob 'sleep))
                   (lambda () (bob 'wake-up))
-                  'asleep))
+                  'asleep
+                  (lambda () (do-nothing))))
 
     ;;; ===== Exhaustion transitions =====
     (define (make-time-evolution-transition predicate threshold to-state)
@@ -259,15 +265,15 @@
     ;;; ===== Health states =====
 
     (define healthy-state 
-      (make-state (lambda ()
-                    (fill-rectangle! 60 60 20 20 #x0F0)
-                    (context 'update-general-state 1))
-                  (lambda () (context 'update-general-state -1))))
+      (make-state (lambda () (context 'update-general-state 1))
+                  (lambda () (context 'update-general-state -1))
+                  'healthy
+                  (lambda () (fill-rectangle! 60 60 20 20 #x0F0))))
     (define ill-state
-      (make-state (lambda ()
-                    (fill-rectangle! 60 60 20 20 #xF00)
-                    (context 'update-general-state -5))
-                  (lambda () (context 'update-general-state 5))))
+      (make-state (lambda () (context 'update-general-state -5))
+                  (lambda () (context 'update-general-state 5))
+                  'ill
+                  (lambda () (fill-rectangle! 60 60 20 20 #xF00))))
 
     ;;; ===== Health transitions =====
 
@@ -317,13 +323,15 @@
     ;;; ===== Compliance states =====
 
     (define submissive-state 
-      (make-state (lambda ()
-                    (fill-rectangle! 80 60 20 20 #x0F0))
-                  (lambda () (do-nothing))))
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'submissive
+                  (lambda () (fill-rectangle! 80 60 20 20 #x0F0))))
     (define rebellious-state
-      (make-state (lambda ()
-                    (fill-rectangle! 80 60 20 20 #xF00))
-                  (lambda () (do-nothing))))
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'rebellious
+                  (lambda () (fill-rectangle! 80 60 20 20 #xF00))))
 
     ;;; ===== Compliance transitions =====
 

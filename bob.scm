@@ -99,16 +99,21 @@
               (do-nothing))))
   		  current-transitions))
 
+    (define (update-graphics)
+      (current-state 'update-graphics))
+
     (define (change-state new-state)
   ;      (if (not (equal? new-state current-state)) ; check for transition to itself
   	  (begin 
   	    (current-state 'exit-action)
   	    (new-state 'entry-action)
   	    (set! current-transitions (new-state 'transitions))
-  	    (set! current-state new-state)))
+  	    (set! current-state new-state)
+        (update-graphics)))
 
     (define (kickstart)
-      (current-state 'entry-action))
+      (current-state 'entry-action)
+      (update-graphics))
 
     (lambda (msg . args)
       (case msg
@@ -117,6 +122,7 @@
         ('kickstart (kickstart))
         ('update-measure (apply update-value args))
         ('state (current-state 'name))
+        ('update-graphics (update-graphics))
         (else (error "Msg not understood: " msg))))))
 
 
@@ -132,7 +138,7 @@
 ;;; State takes at least 2 arguments
 ;;;  entry-action: zero argument procedure (thunk)
 ;;;  exit-action:   idem
-(define (make-state entry-action exit-action . name)
+(define (make-state entry-action exit-action name update-graphics)
   (let ((transitions '()))
     (define (add-transition transition)
       (set! transitions (cons transition transitions)))
@@ -140,9 +146,10 @@
       (case msg
         ('entry-action (entry-action))
         ('exit-action (exit-action))
-        ('name (car name))
+        ('name name)
         ('transitions transitions)
         ('add-transition (apply add-transition args))
+        ('update-graphics (update-graphics))
         (else (error "Msg not understood: " msg))))))
 
 
@@ -161,6 +168,9 @@
     (define (kickstart)
       (map (lambda(fsm) (fsm 'kickstart)) characteristics))
 
+    (define (update-graphics)
+      (map (lambda(fsm) (fsm 'update-graphics)) characteristics))
+
     (define (die) 
       (set! is-dead? #t)
       (color-screen #x000)
@@ -170,12 +180,14 @@
     (define (sleep)
       (set! is-asleep? #t)
       (color-screen #x000)
-      (set! background-color #x000))
+      (set! background-color #x000)
+      (update-graphics))
 
     (define (wake-up)
       (set! is-asleep? #t)
       (color-screen #xFFF)
-      (set! background-color #xFFF))
+      (set! background-color #xFFF)
+      (update-graphics))
 
     (lambda (msg . args)
       (case msg
@@ -186,6 +198,7 @@
         ('sleep (sleep))
         ('wake-up (wake-up))
         ('is-asleep? is-asleep?)
+        ('update-graphics (update-graphics))
         (else (error "Message not understood: " msg))))))
 
 
