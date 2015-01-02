@@ -49,3 +49,10 @@
 	(drawline 44 12 0.5 12 #x000) ; left eyebrow
 	(fill-rectangle! 70 10 18 10 bob-color) ; right cover
 	(drawline 74 18 (- 0.5) 12 #x000)) ; right eyebrow
+
+(define (draw-bob-smile amount)
+	(fill-rectangle! 55 50 21 21 bob-color); clearing previous smile
+	(define (compute-position x width)
+		(fill-rectangle! (+ 65 x) (inexact->exact (round (- 60 (/ (* x x amount) 100)))) 1 1 #xFFF)
+		(if (eq? width 0) (do-nothing) (compute-position (+ x 1) (- width 1))))
+	(compute-position (- 10) 20))

@@ -37,6 +37,7 @@
             'timestep
             (lambda (measure)
               (measure 'update (* (context 'timestep) (context 'general-state)))
+              (draw-bob-smile (- (scale-value (measure 'value) 1300 20) 10))
               (display-characteristic 0 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
