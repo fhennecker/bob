@@ -116,6 +116,7 @@
         ('get-inputs (get-transition-inputs))
         ('kickstart (kickstart))
         ('update-measure (apply update-value args))
+        ('state (current-state 'name))
         (else (error "Msg not understood: " msg))))))
 
 
@@ -131,17 +132,18 @@
 ;;; State takes at least 2 arguments
 ;;;  entry-action: zero argument procedure (thunk)
 ;;;  exit-action:   idem
-(define (make-state entry-action exit-action . transitions)
-  (define (add-transition transition)
-    (set! transitions (cons transition
-			    transitions)))
-  (lambda (msg . args)
-    (case msg
-      ('entry-action (entry-action))
-      ('exit-action (exit-action))
-      ('transitions transitions)
-      ('add-transition (apply add-transition args))
-      (else (error "Msg not understood: " msg)))))
+(define (make-state entry-action exit-action . name)
+  (let ((transitions '()))
+    (define (add-transition transition)
+      (set! transitions (cons transition transitions)))
+    (lambda (msg . args)
+      (case msg
+        ('entry-action (entry-action))
+        ('exit-action (exit-action))
+        ('name (car name))
+        ('transitions transitions)
+        ('add-transition (apply add-transition args))
+        (else (error "Msg not understood: " msg))))))
 
 
 ;;; ===== Bob =====
