@@ -194,8 +194,12 @@
                   'exhausted
                   (lambda () (fill-rectangle! 40 60 20 20 #xF00))))
     (define asleep-state
-      (make-state (lambda () (bob 'sleep))
-                  (lambda () (bob 'wake-up))
+      (make-state (lambda ()  (color-screen #x000)
+                              (set! background-color #x000)
+                              (bob 'update-graphics))
+                  (lambda ()  (color-screen #xFFF)
+                              (set! background-color #xFFF)
+                              (bob 'update-graphics))
                   'asleep
                   (lambda () (do-nothing))))
 
