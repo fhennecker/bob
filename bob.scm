@@ -9,7 +9,13 @@
 ;;; Utilities
 (load "utilities.scm")
 
+;;; Graphics (helper functions to draw the character)
+(load "graphics.scm")
+
 (clear-screen)
+(color-background background-color)
+(draw-bob-head)
+(draw-bob-feet)
 
 (define (get-input context input-name)
   (assoc input-name context))

@@ -107,19 +107,19 @@
       (make-state (lambda () (context 'update-general-state 2))
                   (lambda () (context 'update-general-state -2))
                   'fed
-                  (lambda () (fill-rectangle! 20 60 20 20 #x0F0))))
+                  (lambda () (do-nothing))))
     (define hungry-state
       (make-state (lambda () (context 'update-general-state -2))
                   (lambda () (context 'update-general-state 2))
                   'hungry
-                  (lambda () (fill-rectangle! 20 60 20 20 #xFC0))))
+                  (lambda () (do-nothing))))
     (define starving-state
       (make-state (lambda () 
                       (blinkled 2 3)
                       (context 'update-general-state -5))
                   (lambda () (context 'update-general-state 5))
                   'starving
-                  (lambda () (fill-rectangle! 20 60 20 20 #xF00))))
+                  (lambda () (do-nothing))))
 
     ;;; ===== Hunger transitions =====
 
@@ -128,7 +128,7 @@
             'timestep
             (lambda (measure)
               (measure 'update (* (context 'timestep) (- HUNGER_SPEED)))
-              (display-characteristic 1 (round (/ (measure 'value) 10)))
+              (draw-bob-belly (scale-value (measure 'value) 1300 50))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
@@ -150,7 +150,7 @@
           (if (eq? (exhaustion-fsm 'state) 'asleep)
               (do-nothing)
               (choose-meal))
-          (display-characteristic 1 (round (/ (measure 'value) 10)))
+          (draw-bob-belly (scale-value (measure 'value) 1300 50))
           (if (> (measure 'value) threshold) #t #f))
         to-state))
 
@@ -184,28 +184,26 @@
       (make-state (lambda () (context 'update-general-state 1))
                   (lambda () (context 'update-general-state -1))
                   'awake
-                  (lambda () (fill-rectangle! 40 60 20 20 #x0F0))))
+                  (lambda () (do-nothing))))
     (define sleepy-state
       (make-state (lambda () (context 'update-general-state -2))
                   (lambda () (context 'update-general-state 2))
                   'sleepy
-                  (lambda () (fill-rectangle! 40 60 20 20 #xFC0))))
+                  (lambda () (do-nothing))))
     (define exhausted-state
       (make-state (lambda () 
                         (blinkled 2 3)
                         (context 'update-general-state -5))
                   (lambda () (context 'update-general-state 5))
                   'exhausted
-                  (lambda () (fill-rectangle! 40 60 20 20 #xF00))))
+                  (lambda () (do-nothing))))
     (define asleep-state
-      (make-state (lambda ()  (color-screen #x000)
-                              (set! background-color #x000)
+      (make-state (lambda ()  (set-background-color! #x000)
                               (bob 'update-graphics))
-                  (lambda ()  (color-screen #xFFF)
-                              (set! background-color #xFFF)
+                  (lambda ()  (set-background-color! #xFFF)
                               (bob 'update-graphics))
                   'asleep
-                  (lambda () (do-nothing))))
+                  (lambda () (draw-bob-eyes 1))))
 
     ;;; ===== Exhaustion transitions =====
     (define (make-time-evolution-transition predicate threshold to-state)
@@ -213,7 +211,7 @@
             'timestep
             (lambda (measure)
               (measure 'update (* (context 'timestep) (- EXHAUSTION_SPEED)))
-              (display-characteristic 2 (round (/ (measure 'value) 10)))
+              (draw-bob-eyes (scale-value (measure 'value) 1300 20))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
@@ -237,7 +235,6 @@
         'timestep
         (lambda (measure)
           (measure 'update (* (context 'timestep) EXHAUSTION_SPEED))
-          (display-characteristic 2 (round (/ (measure 'value) 10)))
           (if (eq? (measure 'value) 1300) #t #f))
         asleep-state))
 
