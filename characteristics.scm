@@ -284,11 +284,14 @@
       (make-transition
         'button2-pressed?
         (lambda (measure)
-          (if (context 'button-pressed? 2) 
-              (begin  (measure 'update 200)
-                      (set! medication-amount (+ medication-amount 200))) 
-              (do-nothing))
-          (if (> medication-amount MEDICATION_OVERLOAD_THR) (measure 'update (- 400)) (do-nothing))
+          (if (eq? (exhaustion-fsm 'state) 'asleep)
+            (do-nothing)
+            (begin
+              (if (context 'button-pressed? 2) 
+                  (begin  (measure 'update 200)
+                          (set! medication-amount (+ medication-amount 200))) 
+                  (do-nothing))
+              (if (> medication-amount MEDICATION_OVERLOAD_THR) (measure 'update (- 400)) (do-nothing))))
           (display-characteristic 3 (round (/ (measure 'value) 10)))
           if (predicate (measure 'value) threshold #t #f))
         to-state))
