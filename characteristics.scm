@@ -37,25 +37,28 @@
       (make-transition
         'button1-pressed? ; play button triggered
         (lambda (measure)
-          (context 'update-buttons) ; unpressing the play button
-          (led-animation)
-          (let ((picked-led (modulo (context 'ax) 3))) ; picking "random" value
-            (define (win)
-              (blinkled picked-led 2) (context 'update-buttons) (measure 'update 200))
-            (define (lose)
-              (blinkled picked-led 2) (context 'update-buttons) (measure 'update (- 40)))
-            (define (wait-for-button) ; listening for any button press
-              (context 'update-buttons)
-              (cond ((or (and (eq? picked-led 0) (context 'button-pressed? 0))
-                         (and (eq? picked-led 1) (context 'button-pressed? 1))
-                         (and (eq? picked-led 2) (context 'button-pressed? 2)))
-                      (win))
-                    ; pushed on the wrong button
-                    ((or (context 'button-pressed? 0) (context 'button-pressed? 1) (context 'button-pressed? 2))
-                      (lose))
-                    ; no button pressed
-                    (else (wait-for-button))))
-            (wait-for-button))
+          (if (eq? (exhaustion-fsm 'state) 'asleep)
+            (do-nothing)
+            (begin
+              (context 'update-buttons) ; unpressing the play button
+              (led-animation)
+              (let ((picked-led (modulo (context 'ax) 3))) ; picking "random" value
+                (define (win)
+                  (blinkled picked-led 2) (context 'update-buttons) (measure 'update 200))
+                (define (lose)
+                  (blinkled picked-led 2) (context 'update-buttons) (measure 'update (- 40)))
+                (define (wait-for-button) ; listening for any button press
+                  (context 'update-buttons)
+                  (cond ((or (and (eq? picked-led 0) (context 'button-pressed? 0))
+                             (and (eq? picked-led 1) (context 'button-pressed? 1))
+                             (and (eq? picked-led 2) (context 'button-pressed? 2)))
+                          (win))
+                        ; pushed on the wrong button
+                        ((or (context 'button-pressed? 0) (context 'button-pressed? 1) (context 'button-pressed? 2))
+                          (lose))
+                        ; no button pressed
+                        (else (wait-for-button))))
+                (wait-for-button))))
           (if (predicate (measure 'value) threshold) #t #f))
         to-state))
 
