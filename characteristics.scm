@@ -25,7 +25,7 @@
                   'sad 
                   (lambda () (fill-rectangle! 0 60 20 20 #xFC0))))
     (define depressed-state
-      (make-state (lambda () (do-nothing))
+      (make-state (lambda () (blinkled 2 3))
                   (lambda () (do-nothing))
                   'depressed 
                   (lambda () (fill-rectangle! 0 60 20 20 #xF00))))
@@ -114,7 +114,9 @@
                   'hungry
                   (lambda () (fill-rectangle! 20 60 20 20 #xFC0))))
     (define starving-state
-      (make-state (lambda () (context 'update-general-state -5))
+      (make-state (lambda () 
+                      (blinkled 2 3)
+                      (context 'update-general-state -5))
                   (lambda () (context 'update-general-state 5))
                   'starving
                   (lambda () (fill-rectangle! 20 60 20 20 #xF00))))
@@ -189,7 +191,9 @@
                   'sleepy
                   (lambda () (fill-rectangle! 40 60 20 20 #xFC0))))
     (define exhausted-state
-      (make-state (lambda () (context 'update-general-state -5))
+      (make-state (lambda () 
+                        (blinkled 2 3)
+                        (context 'update-general-state -5))
                   (lambda () (context 'update-general-state 5))
                   'exhausted
                   (lambda () (fill-rectangle! 40 60 20 20 #xF00))))
