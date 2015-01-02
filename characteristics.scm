@@ -11,16 +11,16 @@
 
     (define happy-state
       (make-state (lambda () (fill-rectangle! 0 60 20 20 #x00F))
-                  (lambda () (display "leaving the land of happy people"))))
+                  (lambda () (do-nothing))))
     (define normal-state
       (make-state (lambda () (fill-rectangle! 0 60 20 20 #x0F0))
-                  (lambda () (newline)(display "I am no longer happy "))))
+                  (lambda () (do-nothing))))
     (define sad-state
       (make-state (lambda () (fill-rectangle! 0 60 20 20 #xFC0))
-                  (lambda () (newline)(display "I'm feeling a bit better"))))
+                  (lambda () (do-nothing))))
     (define depressed-state
       (make-state (lambda () (fill-rectangle! 0 60 20 20 #xF00))
-                  (lambda () (newline)(display "I am no longer happy"))))
+                  (lambda () (do-nothing))))
 
     ;;; ===== Happiness transitions =====
 
@@ -180,24 +180,59 @@
                     (fill-rectangle! 40 60 20 20 #xF00)
                     (context 'update-general-state -5))
                   (lambda () (context 'update-general-state 5))))
+    (define asleep-state
+      (make-state (lambda () (bob 'sleep))
+                  (lambda () (bob 'wake-up))))
 
     ;;; ===== Exhaustion transitions =====
     (define (make-time-evolution-transition predicate threshold to-state)
       (make-transition 
             'timestep
             (lambda (measure)
-              (if (> (context 'ax) 18200)
-                (measure 'update (* (context 'timestep) (- EXHAUSTION_SPEED)))
-                (measure 'update (* (context 'timestep) EXHAUSTION_SPEED)))
+              (measure 'update (* (context 'timestep) (- EXHAUSTION_SPEED)))
               (display-characteristic 2 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
+
+    (define (make-sleep-transition)
+      (make-transition
+        'ax
+        (lambda (measure)
+          (if (< (context 'ax) 18200) #t #f))
+        asleep-state))
+    (define (make-wake-up-transition low-threshold high-threshold to-state)
+      (make-transition
+        'ax
+        (lambda (measure)
+          (if (> (context 'ax) 18200) 
+            (if (and (>= (measure 'value) low-threshold) (< (measure 'value) high-threshold))
+                #t #f) 
+            #f))
+        to-state))
+    (define (make-recovery-transition) ; recovering energy when sleeping
+      (make-transition
+        'timestep
+        (lambda (measure)
+          (measure 'update (* (context 'timestep) EXHAUSTION_SPEED))
+          (display-characteristic 2 (round (/ (measure 'value) 10)))
+          (if (eq? (measure 'value) 1300) #t #f))
+        asleep-state))
 
     (awake-state 'add-transition (make-time-evolution-transition < AWAKE_SLEEPY_THR sleepy-state))
     (sleepy-state 'add-transition (make-time-evolution-transition < SLEEPY_EXHAUSTED_THR exhausted-state))
 
     (sleepy-state 'add-transition (make-time-evolution-transition > AWAKE_SLEEPY_THR awake-state))
     (exhausted-state 'add-transition (make-time-evolution-transition > SLEEPY_EXHAUSTED_THR sleepy-state))
+
+    ; to sleep transition
+    (awake-state 'add-transition (make-sleep-transition))
+    (sleepy-state 'add-transition (make-sleep-transition))
+    (exhausted-state 'add-transition (make-sleep-transition))
+
+    (asleep-state 'add-transition (make-wake-up-transition AWAKE_SLEEPY_THR 1301 awake-state))
+    (asleep-state 'add-transition (make-wake-up-transition SLEEPY_EXHAUSTED_THR AWAKE_SLEEPY_THR sleepy-state))
+    (asleep-state 'add-transition (make-wake-up-transition 0 SLEEPY_EXHAUSTED_THR exhausted-state))
+    (asleep-state 'add-transition (make-recovery-transition))
 
   (make-finite-state-machine awake-state #t)))
 

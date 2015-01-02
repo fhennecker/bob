@@ -149,7 +149,8 @@
 ;;; The more characteristics are in a bad state, the quicker its general state 
 ;;; goes down. 
 (define (make-bob characteristics)
-  (let ((is-dead? #f))
+  (let ((is-dead? #f)
+        (is-asleep? #f))
     ; feeding context to all characteristics FSMs of bob
     (define (update context)
       (map (lambda(fsm) (fsm 'feed-context context)) characteristics))
@@ -164,18 +165,30 @@
       (fill-rectangle! 60 20 10 90 #xFFF)
       (fill-rectangle! 30 50 70 10 #xFFF))
 
+    (define (sleep)
+      (set! is-asleep? #t)
+      (color-screen #x000)
+      (set! background-color #x000))
+
+    (define (wake-up)
+      (set! is-asleep? #t)
+      (color-screen #xFFF)
+      (set! background-color #xFFF))
+
     (lambda (msg . args)
       (case msg
         ('update (apply update args))
         ('kickstart (kickstart))
         ('die (die))
         ('is-dead? is-dead?)
+        ('sleep (sleep))
+        ('wake-up (wake-up))
+        ('is-asleep? is-asleep?)
         (else (error "Message not understood: " msg))))))
 
 
 ;;; Creating all FSMs, states and transitions
 (load "characteristics.scm")
-
 
 ;;; ===== Tests =====
 (define testing #f)
