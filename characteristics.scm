@@ -333,12 +333,12 @@
       (make-state (lambda () (do-nothing))
                   (lambda () (do-nothing))
                   'submissive
-                  (lambda () (fill-rectangle! 80 60 20 20 #x0F0))))
+                  (lambda () (draw-bob-nice-eyebrows))))
     (define rebellious-state
       (make-state (lambda () (do-nothing))
                   (lambda () (do-nothing))
                   'rebellious
-                  (lambda () (fill-rectangle! 80 60 20 20 #xF00))))
+                  (lambda () (draw-bob-mean-eyebrows))))
 
     ;;; ===== Compliance transitions =====
 

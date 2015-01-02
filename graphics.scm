@@ -13,6 +13,12 @@
 	(color-background color)
 	(draw-bob-feet))
 
+(define (drawline x y slope width color) ; line starting in (x, y) with a certain slope to the right
+	(fill-rectangle! x (inexact->exact (round y)) 1 1 color)
+	(if (eq? width 0) 
+		(do-nothing) 
+		(drawline (+ x 1) (+ y slope) slope (- width 1) color)))
+
 (define (draw-bob-head)
 	(fill-rectangle! 30 10 70 70 bob-color))
 
@@ -31,3 +37,15 @@
 	(fill-rectangle! (- 65 width) 80 width 40 bob-color) ; left part
 	(fill-rectangle! 65 80 width 40 bob-color) ; right part
 	(fill-rectangle! (+ 65 width) 80 (- 65 width) 40 background-color)) ; right of right part
+
+(define (draw-bob-nice-eyebrows)
+	(fill-rectangle! 42 10 18 10 bob-color) ; left cover
+	(drawline 44 18 (- 0.5) 12 #xFFF) ; left eyebrow
+	(fill-rectangle! 70 10 18 10 bob-color) ; right cover
+	(drawline 74 12 0.5 12 #xFFF)) ; right eyebrow
+
+(define (draw-bob-mean-eyebrows)
+	(fill-rectangle! 42 10 18 10 bob-color) ; left cover
+	(drawline 44 12 0.5 12 #x000) ; left eyebrow
+	(fill-rectangle! 70 10 18 10 bob-color) ; right cover
+	(drawline 74 18 (- 0.5) 12 #x000)) ; right eyebrow
