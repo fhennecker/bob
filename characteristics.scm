@@ -13,22 +13,22 @@
       (make-state (lambda () (do-nothing))
                   (lambda () (do-nothing))
                   'happy 
-                  (lambda () (fill-rectangle! 0 60 20 20 #x00F))))
+                  (lambda () (do-nothing))))
     (define normal-state
       (make-state (lambda () (do-nothing))
                   (lambda () (do-nothing))
                   'normal 
-                  (lambda () (fill-rectangle! 0 60 20 20 #x0F0))))
+                  (lambda () (do-nothing))))
     (define sad-state
       (make-state (lambda () (do-nothing))
                   (lambda () (do-nothing))
                   'sad 
-                  (lambda () (fill-rectangle! 0 60 20 20 #xFC0))))
+                  (lambda () (do-nothing))))
     (define depressed-state
       (make-state (lambda () (blinkled 2 3))
                   (lambda () (do-nothing))
                   'depressed 
-                  (lambda () (fill-rectangle! 0 60 20 20 #xF00))))
+                  (lambda () (do-nothing))))
 
     ;;; ===== Happiness transitions =====
 
