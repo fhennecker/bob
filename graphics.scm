@@ -62,7 +62,6 @@
 	(if (eq? number 0) (do-nothing) (draw-poops-loop (- number 1))))
 
 (define (draw-poops number)
-	(fill-rectangle! 0 0 10 130 background-color)
-	(if (or (< number 1) (> number 11))
+	(if (or (< number 0) (> number 11))
 		(do-nothing)
-		(draw-poops-loop number)))
+		(begin (fill-rectangle! 0 0 10 130 background-color) (draw-poops-loop number))))

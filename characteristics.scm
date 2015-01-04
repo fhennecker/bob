@@ -286,16 +286,17 @@
     ;;; ===== Health transitions =====
 
     ; This transition doesn't update measure itself, but it checks if we didn't
-    ; give too much medication to the pet
-    (define (make-time-evolution-transition)
+    ; give too much medication to the pet as well as checking if the value hasn't
+    ; been affected by other FSMs (poop for example)
+    (define (make-time-evolution-transition threshold to-state)
       (make-transition 
             'timestep
             (lambda (measure)
               (set! medication-amount (min 1300 (max 0 (- medication-amount (* MEDICATION_WEAROUT_SPEED (context 'timestep))))))
               (display-characteristic 4 (round (/ medication-amount 10)))
               (display-characteristic 3 (round (/ (measure 'value) 10)))
-              #f)
-            healthy-state)) ; dummy state
+              (if (< (measure 'value) threshold) #t #f))
+            to-state)) ; dummy state
 
     (define (make-cure-transition predicate threshold to-state)
       (make-transition
@@ -325,8 +326,8 @@
           if (predicate (measure 'value) threshold #t #f))
         to-state))
 
-    (healthy-state 'add-transition (make-time-evolution-transition))
-    (ill-state 'add-transition (make-time-evolution-transition))
+    (healthy-state 'add-transition (make-time-evolution-transition HEALTHY_ILL_THR ill-state))
+    (ill-state 'add-transition (make-time-evolution-transition -1 ill-state))
 
     (healthy-state 'add-transition (make-cure-transition < HEALTHY_ILL_THR ill-state))
     (ill-state 'add-transition (make-cure-transition > HEALTHY_ILL_THR healthy-state))
@@ -431,6 +432,7 @@
         'timestep
         (lambda (measure)
           (set! digesting (+ digesting (* DIGESTION_SPEED (context 'timestep))))
+          (health-fsm 'update-measure (* (context 'timestep) number-of-poops -2))
           (if (> digesting 50)
             (begin (set! number-of-poops (+ number-of-poops 1))
               (set! digesting 0)
