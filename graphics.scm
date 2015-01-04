@@ -33,10 +33,10 @@
 	(fill-rectangle! 70 (- 40 height) 20 height bob-eyes-color)) ; right eye
 
 (define (draw-bob-belly width)
-	(fill-rectangle! 0 80 (- 65 width) 40 background-color) ; left of left part
+	(fill-rectangle! 10 80 (- 55 width) 40 background-color) ; left of left part
 	(fill-rectangle! (- 65 width) 80 width 40 bob-color) ; left part
 	(fill-rectangle! 65 80 width 40 bob-color) ; right part
-	(fill-rectangle! (+ 65 width) 80 (- 65 width) 40 background-color)) ; right of right part
+	(fill-rectangle! (+ 65 width) 80 (- 55 width) 40 background-color)) ; right of right part
 
 (define (draw-bob-nice-eyebrows)
 	(fill-rectangle! 42 10 18 10 bob-color) ; left cover
@@ -56,3 +56,12 @@
 		(fill-rectangle! (+ 65 x) (inexact->exact (round (- 60 (/ (* x x amount) 100)))) 1 1 #xFFF)
 		(if (eq? width 0) (do-nothing) (compute-position (+ x 1) (- width 1))))
 	(compute-position (- 10) 20))
+
+(define (draw-poops-loop number)
+	(fill-rectangle! 0 (- 130 (* number 11)) 10 10 #x630)
+	(if (eq? number 0) (do-nothing) (draw-poops-loop (- number 1))))
+
+(define (draw-poops number)
+	(if (or (< number 1) (> number 11))
+		(do-nothing)
+		(draw-poops-loop number)))
