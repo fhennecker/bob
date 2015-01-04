@@ -110,7 +110,7 @@
                   (lambda () (do-nothing))))
     (define hungry-state
       (make-state (lambda () (context 'update-general-state -2)
-                              (if (eq? (compliance-fsm 'state) 'rebellious) (blinkled 2 2))
+                              (if (eq? (compliance-fsm 'state) 'rebellious) (blinkled 2 2)))
                   (lambda () (context 'update-general-state 2))
                   'hungry
                   (lambda () (do-nothing))))
