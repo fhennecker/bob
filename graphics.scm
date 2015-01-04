@@ -36,7 +36,7 @@
 	(fill-rectangle! 10 80 (- 55 width) 40 background-color) ; left of left part
 	(fill-rectangle! (- 65 width) 80 width 40 bob-color) ; left part
 	(fill-rectangle! 65 80 width 40 bob-color) ; right part
-	(fill-rectangle! (+ 65 width) 80 (- 55 width) 40 background-color)) ; right of right part
+	(fill-rectangle! (+ 65 width) 80 (- 65 width) 40 background-color)) ; right of right part
 
 (define (draw-bob-nice-eyebrows)
 	(fill-rectangle! 42 10 18 10 bob-color) ; left cover
