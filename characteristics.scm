@@ -394,7 +394,7 @@
 (define poop-fsm
   (let ((TOILET_NEED_THR 300)
         (POOP_THR 10)
-        (DIGESTION_SPEED 100)
+        (DIGESTION_SPEED 4)
         (number-of-poops 0)
         (digesting 0))
 
@@ -404,12 +404,13 @@
       (make-state (lambda () (set! number-of-poops 0))
                   (lambda () (do-nothing))
                   'digesting
-                  (lambda () (draw-poops number-of-poops))))
+                  (lambda ()  (draw-poops number-of-poops)
+                              (erase-poop-warning))))
     (define toilet-need-state
-      (make-state (lambda () (do-nothing))
+      (make-state (lambda () (blinkled 2 2))
                   (lambda () (do-nothing))
                   'toilet-need
-                  (lambda () (draw-poops number-of-poops))))
+                  (lambda () (draw-poop-warning) )))
     (define poop-state
       (make-state (lambda () (do-nothing))
                   (lambda () (do-nothing))

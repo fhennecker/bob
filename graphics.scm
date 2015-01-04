@@ -57,6 +57,13 @@
 		(if (eq? width 0) (do-nothing) (compute-position (+ x 1) (- width 1))))
 	(compute-position (- 10) 20))
 
+(define (draw-poop-warning)
+	(fill-rectangle! 15 10 4 10 #xF00)
+	(fill-rectangle! 15 23 4 4 #xF00))
+
+(define (erase-poop-warning)
+	(fill-rectangle! 15 10 4 17 background-color))
+
 (define (draw-poops-loop number)
 	(fill-rectangle! 0 (- 130 (* number 11)) 10 10 #x630)
 	(if (eq? number 0) (do-nothing) (draw-poops-loop (- number 1))))
