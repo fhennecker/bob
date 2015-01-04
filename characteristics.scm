@@ -109,7 +109,8 @@
                   'fed
                   (lambda () (do-nothing))))
     (define hungry-state
-      (make-state (lambda () (context 'update-general-state -2))
+      (make-state (lambda () (context 'update-general-state -2)
+                              (if (eq? (compliance-fsm 'state) 'rebellious) (blinkled 2 2))
                   (lambda () (context 'update-general-state 2))
                   'hungry
                   (lambda () (do-nothing))))
@@ -186,7 +187,8 @@
                   'awake
                   (lambda () (do-nothing))))
     (define sleepy-state
-      (make-state (lambda () (context 'update-general-state -2))
+      (make-state (lambda () (context 'update-general-state -2)
+                              (if (eq? (compliance-fsm 'state) 'rebellious) (blinkled 2 2) (do-nothing)))
                   (lambda () (context 'update-general-state 2))
                   'sleepy
                   (lambda () (do-nothing))))
