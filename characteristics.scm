@@ -38,7 +38,6 @@
             (lambda (measure)
               (measure 'update (* (context 'timestep) (context 'general-state)))
               (draw-bob-smile (- (scale-value (measure 'value) 1300 20) 10))
-              (display-characteristic 0 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
@@ -293,8 +292,6 @@
             'timestep
             (lambda (measure)
               (set! medication-amount (min 1300 (max 0 (- medication-amount (* MEDICATION_WEAROUT_SPEED (context 'timestep))))))
-              (display-characteristic 4 (round (/ medication-amount 10)))
-              (display-characteristic 3 (round (/ (measure 'value) 10)))
               (if (< (measure 'value) threshold) #t #f))
             to-state)) ; dummy state
 
@@ -322,7 +319,6 @@
                   ) 
                   (do-nothing))
               (if (> medication-amount MEDICATION_OVERLOAD_THR) (measure 'update (- 400)) (do-nothing))))
-          (display-characteristic 3 (round (/ (measure 'value) 10)))
           if (predicate (measure 'value) threshold #t #f))
         to-state))
 
@@ -361,7 +357,6 @@
             'timestep
             (lambda (measure)
               (measure 'set (+ 800 (* 100 (context 'general-state))))
-              (display-characteristic 5 (round (/ (measure 'value) 10)))
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
@@ -424,7 +419,6 @@
             'timestep
             (lambda (measure)
               (measure 'update (- (* DIGESTION_SPEED (context 'timestep))))
-              (display-characteristic 6 (round (/ (measure 'value) 10)))
               (if (< (measure 'value) threshold) #t #f))
             to-state))
 
