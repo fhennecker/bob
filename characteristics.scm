@@ -141,11 +141,23 @@
             (context 'update-buttons) ; "unpress" the button which took us to this transition
             ; wait for another button press, then "unpress" that button again so 
             ; it doesn't transition to some other state in another fsm
-            (cond ((context 'button-pressed? 0) (measure 'update 50) (context 'update-buttons))
-                  ((context 'button-pressed? 1) (measure 'update 100) (context 'update-buttons))
+            (cond ((context 'button-pressed? 0) 
+                      ; will only eat a big snack if he is rebellious, and will only eat
+                      ; small food when ill
+                      (if (and (eq? (compliance-fsm 'state) 'rebellious) (not (eq? (health-fsm 'state) 'ill))) 
+                        (do-nothing)
+                        (measure 'update 50)) 
+                      (context 'update-buttons))
+                  ((context 'button-pressed? 1) 
+                      (if (eq? (compliance-fsm 'state) 'rebellious) 
+                        (do-nothing)
+                        (measure 'update 100)) 
+                      (context 'update-buttons))
                   ((context 'button-pressed? 2) 
-                    (measure 'update 300) 
-                    (health-fsm 'update-measure (- 50))
+                    (if (eq? (health-fsm 'state) 'ill)
+                      (do-nothing)
+                      (begin (measure 'update 300) 
+                        (health-fsm 'update-measure (- 50))))
                     (context 'update-buttons))
                   (else (choose-meal))))
           (if (eq? (exhaustion-fsm 'state) 'asleep)
