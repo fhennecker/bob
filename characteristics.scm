@@ -404,13 +404,16 @@
   (let ((TOILET_NEED_THR 300)
         (POOP_THR 10)
         (DIGESTION_SPEED 4)
+        (TOILET_TRAINED_THR 6)
         (number-of-poops 0)
-        (digesting 0))
+        (digesting 0)
+        (toilet-times 0)) ; number of times he went to the toilet
 
     ;;; ===== Poop states =====
 
     (define digesting-state
-      (make-state (lambda () (set! number-of-poops 0))
+      (make-state (lambda ()  (set! number-of-poops 0) 
+                              (set! toilet-times (+ toilet-times 1)))
                   (lambda () (do-nothing))
                   'digesting
                   (lambda ()  (draw-poops number-of-poops)
@@ -432,7 +435,9 @@
       (make-transition 
             'timestep
             (lambda (measure)
-              (measure 'update (- (* DIGESTION_SPEED (context 'timestep))))
+              (if (< toilet-times TOILET_TRAINED_THR)
+                (measure 'update (- (* DIGESTION_SPEED (context 'timestep))))
+                (do-nothing)) ; knows how to go to the toilet, won't ask for it anymore
               (if (< (measure 'value) threshold) #t #f))
             to-state))
 
