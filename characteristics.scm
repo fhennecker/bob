@@ -98,7 +98,7 @@
 ;;; ============================================================================
 
 (define hunger-fsm
-  (let ((HUNGER_SPEED 3)
+  (let ((HUNGER_SPEED 5)
         (FED_HUNGRY_THR 800)
         (HUNGRY_STARVING_THR 300))
 
@@ -175,7 +175,7 @@
 ;;; ============================================================================
 
 (define exhaustion-fsm
-  (let ((EXHAUSTION_SPEED 5)
+  (let ((EXHAUSTION_SPEED 3)
         (AWAKE_SLEEPY_THR 500)
         (SLEEPY_EXHAUSTED_THR 200))
 
@@ -305,8 +305,20 @@
             (do-nothing)
             (begin
               (if (context 'button-pressed? 2) 
-                  (begin  (measure 'update 200)
-                          (set! medication-amount (+ medication-amount 200))) 
+                (begin 
+                  (define (choose-cure) ; medicine, poop/clean the room
+                    (context 'update-buttons)
+                    (cond ((context 'button-pressed? 0) 
+                              (measure 'update 200)
+                              (set! medication-amount (+ medication-amount 200)) 
+                              (context 'update-buttons))
+                          ((context 'button-pressed? 1)
+                              (poop-fsm 'update-measure 1000) ; makes him poop and clean the room
+                              (context 'update-buttons))
+                          ((context 'button-pressed? 2) (context 'update-buttons)) ; doing nothing
+                          (else (choose-cure))))
+                  (choose-cure)
+                  ) 
                   (do-nothing))
               (if (> medication-amount MEDICATION_OVERLOAD_THR) (measure 'update (- 400)) (do-nothing))))
           (display-characteristic 3 (round (/ (measure 'value) 10)))
@@ -356,3 +368,81 @@
     (rebellious-state 'add-transition (make-time-evolution-transition > SUBMISSIVE_REBELLIOUS_THR submissive-state))
   
   (make-finite-state-machine submissive-state #f)))
+
+;;; ============================================================================
+;;;                                   POOP
+;;; ============================================================================
+
+(define poop
+  (let ((DIGESTION_SPEED 3)
+        (poops-number 0)
+        (digested 0)
+        (to-digest 0))
+    (define (fill-stomach value)
+      (set! to-digest (+ to-digest value)))
+    (define (timestep)
+      (set! to-digest (- to-digest (* DIGESTION_SPEED (context 'timestep))))
+      (set! digested (+ digested (* DIGESTION_SPEED (context 'timestep)))))
+    (lambda (msg . args)
+      (case msg
+        ('fill-stomach (apply fill-stomach args))
+        ('timestep)))
+  ))
+
+
+(define poop-fsm
+  (let ((TOILET_NEED_THR 300)
+        (POOP_THR 10)
+        (DIGESTION_SPEED 100)
+        (number-of-poops 0)
+        (digesting 0))
+
+    ;;; ===== Poop states =====
+
+    (define digesting-state
+      (make-state (lambda () (set! number-of-poops 0))
+                  (lambda () (do-nothing))
+                  'digesting
+                  (lambda () (draw-poops number-of-poops))))
+    (define toilet-need-state
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'toilet-need
+                  (lambda () (draw-poops number-of-poops))))
+    (define poop-state
+      (make-state (lambda () (do-nothing))
+                  (lambda () (do-nothing))
+                  'poop
+                  (lambda () (draw-poops number-of-poops))))
+
+    ;;; ===== Poop transitions =====
+
+    (define (make-time-evolution-transition threshold to-state)
+      (make-transition 
+            'timestep
+            (lambda (measure)
+              (measure 'update (- (* DIGESTION_SPEED (context 'timestep))))
+              (display-characteristic 6 (round (/ (measure 'value) 10)))
+              (if (< (measure 'value) threshold) #t #f))
+            to-state))
+
+    (define (make-pooping-transition) ; pooping regularly when in poop-state
+      (make-transition
+        'timestep
+        (lambda (measure)
+          (set! digesting (+ digesting (* DIGESTION_SPEED (context 'timestep))))
+          (if (> digesting 50)
+            (begin (set! number-of-poops (+ number-of-poops 1))
+              (set! digesting 0)
+              (draw-poops number-of-poops))
+            (do-nothing))
+          (if (> (measure 'value) POOP_THR) 
+            (begin (measure 'set 1000) #t) #f))
+        digesting-state))
+
+    (digesting-state 'add-transition (make-time-evolution-transition TOILET_NEED_THR toilet-need-state))
+    (toilet-need-state 'add-transition (make-time-evolution-transition POOP_THR poop-state))
+    (poop-state 'add-transition (make-pooping-transition))
+
+  (make-finite-state-machine digesting-state #f)))
+

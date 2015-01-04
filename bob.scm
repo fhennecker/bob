@@ -81,7 +81,8 @@
 
     (define (update-value value)
       (set! measure-value (min 1300 (max 0 (+ measure-value value))))
-      (if (and deathly (eq? measure-value 0)) (bob 'die) (do-nothing)))
+      (if (and deathly (eq? measure-value 0)) (bob 'die) (do-nothing))
+      (update-graphics))
     (define (set-measure value)
       (set! measure-value (min 1300 (max 0 value))))
     (define (measure msg . args)
@@ -208,7 +209,7 @@
 
 ;;; ===== Main loop and run =====
 (define context (make-context 0 0))
-(define bob (make-bob (list happiness-fsm hunger-fsm exhaustion-fsm health-fsm compliance-fsm)))
+(define bob (make-bob (list happiness-fsm hunger-fsm exhaustion-fsm health-fsm compliance-fsm poop-fsm)))
 (bob 'kickstart)
 
 (define (run bob context iteration) 
