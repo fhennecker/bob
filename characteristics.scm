@@ -3,9 +3,9 @@
 ;;; ============================================================================
 
 (define happiness-fsm
-  (let ((HAPPY_NORMAL_THR 1000)
-        (NORMAL_SAD_THR 400)
-        (SAD_DEPRESSED_THR 200))
+  (let ((HAPPY_NORMAL_THR 1000) ; these are thresholds used to determine from
+        (NORMAL_SAD_THR 400)    ; which value we need to change from a state
+        (SAD_DEPRESSED_THR 200)); to the other
 
     ;;; ===== Happiness states =====
 
@@ -32,6 +32,7 @@
 
     ;;; ===== Happiness transitions =====
 
+    ; Happiness varies each timestep in proportion to Bob's general state
     (define (make-time-evolution-transition predicate threshold to-state)
       (make-transition 
             'timestep
@@ -57,7 +58,8 @@
                   (blinkled picked-led 2) (context 'update-buttons) (measure 'update (- 40)))
                 (define (wait-for-button) ; listening for any button press
                   (context 'update-buttons)
-                  (cond ((or (and (eq? picked-led 0) (context 'button-pressed? 0))
+                  (cond ; pushed on the right button
+                        ((or (and (eq? picked-led 0) (context 'button-pressed? 0))
                              (and (eq? picked-led 1) (context 'button-pressed? 1))
                              (and (eq? picked-led 2) (context 'button-pressed? 2)))
                           (win))
@@ -70,12 +72,12 @@
           (if (predicate (measure 'value) threshold) #t #f))
         to-state))
 
-    ;;; transitions from a state to the state below 
+    ;;; timestep transitions from a state to the state below 
     (happy-state 'add-transition (make-time-evolution-transition < HAPPY_NORMAL_THR normal-state))
     (normal-state 'add-transition (make-time-evolution-transition < NORMAL_SAD_THR sad-state))
     (sad-state 'add-transition (make-time-evolution-transition < SAD_DEPRESSED_THR depressed-state))
 
-    ;;; transitions from a state to the state above
+    ;;; timestep transitions from a state to the state above
     (normal-state 'add-transition (make-time-evolution-transition > HAPPY_NORMAL_THR happy-state))
     (sad-state 'add-transition (make-time-evolution-transition > NORMAL_SAD_THR normal-state))
     (depressed-state 'add-transition (make-time-evolution-transition > SAD_DEPRESSED_THR sad-state))
@@ -97,7 +99,7 @@
 ;;; ============================================================================
 
 (define hunger-fsm
-  (let ((HUNGER_SPEED 5)
+  (let ((HUNGER_SPEED 5) ; each timestep, hunger's measure diminishes by HUNGER_SPEED
         (FED_HUNGRY_THR 800)
         (HUNGRY_STARVING_THR 300))
 
@@ -133,6 +135,8 @@
               (if (predicate (measure 'value) threshold) #t #f))
             to-state))
 
+    ; This transition is triggered when the feed button is pressed, and asks
+    ; the user what kind of food he wants to give to Bob
     (define (make-feeding-transition threshold to-state)
       (make-transition
         'button0-pressed?
@@ -220,6 +224,7 @@
                   (lambda () (draw-bob-eyes 1))))
 
     ;;; ===== Exhaustion transitions =====
+    ; getting tired while being awake
     (define (make-time-evolution-transition predicate threshold to-state)
       (make-transition 
             'timestep
@@ -309,6 +314,8 @@
               (if (< (measure 'value) threshold) #t #f))
             to-state)) ; dummy state
 
+    ; This transition is triggered when button2 is pushed. It then asks the
+    ; user if he wants to give medication or make Bob poop/clean his poop
     (define (make-cure-transition predicate threshold to-state)
       (make-transition
         'button2-pressed?
@@ -383,23 +390,6 @@
 ;;;                                   POOP
 ;;; ============================================================================
 
-(define poop
-  (let ((DIGESTION_SPEED 3)
-        (poops-number 0)
-        (digested 0)
-        (to-digest 0))
-    (define (fill-stomach value)
-      (set! to-digest (+ to-digest value)))
-    (define (timestep)
-      (set! to-digest (- to-digest (* DIGESTION_SPEED (context 'timestep))))
-      (set! digested (+ digested (* DIGESTION_SPEED (context 'timestep)))))
-    (lambda (msg . args)
-      (case msg
-        ('fill-stomach (apply fill-stomach args))
-        ('timestep)))
-  ))
-
-
 (define poop-fsm
   (let ((TOILET_NEED_THR 300)
         (POOP_THR 10)
@@ -431,6 +421,7 @@
 
     ;;; ===== Poop transitions =====
 
+    ; digesting over time
     (define (make-time-evolution-transition threshold to-state)
       (make-transition 
             'timestep

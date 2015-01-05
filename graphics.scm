@@ -2,7 +2,8 @@
 (define bob-eyes-color #xFFF)
 (define background-color #xFFF)
 
-(define (color-background color)
+; doesn't color the whole screen, leaves bob's face untouched
+(define (color-background color) 
 	(fill-rectangle! 0 0 130 10 color) ; top background
 	(fill-rectangle! 0 10 30 70 color) ; left background
 	(fill-rectangle! 100 10 30 70 color) ; right background
