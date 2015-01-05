@@ -447,7 +447,7 @@
         (lambda (measure)
           (set! digesting (+ digesting (* DIGESTION_SPEED (context 'timestep))))
           (health-fsm 'update-measure (* (context 'timestep) number-of-poops -2))
-          (if (> digesting 50)
+          (if (> digesting 100)
             (begin (set! number-of-poops (+ number-of-poops 1))
               (set! digesting 0)
               (draw-poops number-of-poops))
